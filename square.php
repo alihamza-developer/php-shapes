@@ -1,6 +1,7 @@
 <?php
 require_once "functions.php";
 
+
 $width = cm_to_px($_GET['width']); // 30 cm
 $height = cm_to_px($_GET['height']); // 20 cm
 $type = isset($_GET['type']) ? $_GET['type'] : "cornor"; // (cornor,rounded)
@@ -52,7 +53,9 @@ function get_svg($content)
             height="{$height}"
             rx="{$corner_radius}"
             ry="{$corner_radius}"
-            fill="none"/>
+            fill="none"
+            stroke="#333"
+            />
 
             {$content}
         </svg>
@@ -82,3 +85,24 @@ function download_png()
     svg_to_png($svg, "output/{$filename}");
     return $filename;
 }
+
+// Download PDF
+function download_pdf($svg, $png)
+{
+    global $width, $height;
+    $pdf = new TCPDF(($width > $height) ? 'L' : 'P', 'pt', [$width, $height]);
+    $pdf->setPrintHeader(false);
+    $pdf->setPrintFooter(false);
+    $pdf->AddPage();
+
+    // Place SVG
+    $pdf->ImageSVG($file = "output/$svg", 0, 0, $width, $height, '', '', 'C', 0, false);
+    $pdf->Image($file = "output/$png", 0, 0, $width, $height, '', '', 'C', 0, false, 'C');
+    $pdf->Output(__DIR__ . "/output/output.pdf", "F");
+}
+
+clear_output_dir();
+
+$svg = download_mask();
+$png = download_png();
+download_pdf($svg, $png);

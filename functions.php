@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/vendor/autoload.php';
+
 // CM to PX
 function cm_to_px($cm)
 {
@@ -149,4 +151,24 @@ function svg_to_png($svg, $output)
         . escapeshellarg($temp);
     exec($cmd, $output, $result);
     @unlink($temp);
+}
+
+
+function clear_output_dir($dir = "output")
+{
+    if (!is_dir($dir)) {
+        return;
+    }
+
+    $files = glob($dir . '/*'); // all files in dir
+
+    foreach ($files as $file) {
+        if (is_file($file)) {
+            unlink($file); // delete file
+        } elseif (is_dir($file)) {
+            // optional: delete subdirs too
+            array_map('unlink', glob("$file/*.*"));
+            rmdir($file);
+        }
+    }
 }
