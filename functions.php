@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/vendor/autoload.php';
+define('INKSCAPE_PATH', '"C:\\Program Files\\Inkscape\\bin\\inkscape.exe"');
+
 
 // CM to PX
 function cm_to_px($cm)
@@ -19,6 +21,7 @@ function mm_to_px($mm)
     return $mm * (96 / 25.4);
 }
 
+// Compress SVG to single path
 function compress_svg($svg)
 {
     $xml = simplexml_load_string($svg);
@@ -146,13 +149,10 @@ function generate_file_name($ext, $folder_dir = '', $return_full_path = false, $
 // SVG to PNG
 function svg_to_png($svg, $output)
 {
-    $inkscape_path = '"C:\\Program Files\\Inkscape\\bin\\inkscape.exe"';
-
     $temp = generate_file_name("svg", "", true);
     file_put_contents($temp, $svg);
 
-
-    $cmd = "{$inkscape_path} --export-type=png --export-filename="
+    $cmd = INKSCAPE_PATH . " --export-type=png --export-filename="
         . escapeshellarg($output) . " "
         . escapeshellarg($temp);
     exec($cmd, $output, $result);
