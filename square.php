@@ -126,6 +126,7 @@ function download_pdf($svg, $png)
 
 clear_output_dir();
 
+@mkdir("output"); // Remove This if want to place at any other location
 $svg = download_mask();
 $png = download_png();
 download_pdf($svg, $png);
