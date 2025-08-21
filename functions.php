@@ -7,6 +7,12 @@ function cm_to_px($cm)
     return $cm * (96 / 2.54);
 }
 
+// PX to CM
+function px_to_cm($px)
+{
+    return $px / (96 / 2.54);
+}
+
 // MM to PX
 function mm_to_px($mm)
 {
@@ -152,7 +158,6 @@ function svg_to_png($svg, $output)
     exec($cmd, $output, $result);
     @unlink($temp);
 }
-
 
 function clear_output_dir($dir = "output")
 {
