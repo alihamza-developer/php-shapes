@@ -49,6 +49,7 @@ function get_svg($content, $type = "")
     global $width, $height, $corner_radius;
 
     $is_pdf = $type === 'pdf';
+    $is_png = $type === 'png';
     $gap = $is_pdf ? PDF_OUTLINE_GAP : 0;
     $plate_x = $gap / 2;
     $plate_y = $gap / 2;
@@ -66,13 +67,23 @@ function get_svg($content, $type = "")
                 height="{$outline_h}" 
                 rx="{$outline_radius}" 
                 ry="{$outline_radius}" 
-                fill="#ffffff" 
+                fill="none" 
                 stroke="blue" 
                 stroke-width="1" 
                 />
             SVG;
 
     $outline = $is_pdf ? $outline : '';
+
+
+
+    $props = <<<PROPS
+            stroke="#000"
+            storke-width="1"
+    PROPS;
+
+    $props = $is_png ? "" : $props;
+
 
     $svg = <<<BODY
         <svg xmlns="http://www.w3.org/2000/svg" width="{$outline_w}" height="{$outline_h}" viewBox="0 0 {$outline_w} {$outline_h}">
@@ -86,9 +97,8 @@ function get_svg($content, $type = "")
             height="{$height}"
             rx="{$corner_radius}"
             ry="{$corner_radius}"
-            fill="#ffffff"
-            stroke="#333"
-            storke-width="1"
+            fill="none"
+            {$props}
             />
 
             {$content}
@@ -113,7 +123,8 @@ function download_mask()
 function download_png()
 {
     global $bolts;
-    $svg = get_svg($bolts, "png");
+    $svg = get_svg($bolts, 'png');
+
     $filename = generate_file_name("png");
 
     svg_to_png($svg, "output/{$filename}");
@@ -140,7 +151,7 @@ function download_pdf($svg, $png)
     $pdf->AddPage();
 
     $pdf->ImageSVG($svg, 0, 0, $width + PDF_OUTLINE_GAP, $height + PDF_OUTLINE_GAP); // Placing SVG
-    $pdf->Image($png, PDF_OUTLINE_GAP / 2, PDF_OUTLINE_GAP / 2, $width, $height); // Placing PNG
+    $pdf->Image($png, 0, 0, $width, $height); // Placing PNG
 
 
     // Placing (Targhe Insegne) Logo
@@ -149,14 +160,14 @@ function download_pdf($svg, $png)
     // Placing (Dimension Text)
     $dim_width = px_to_cm($width + PDF_OUTLINE_GAP);
     $dim_height = px_to_cm($height + PDF_OUTLINE_GAP);
-    $text = "Dimension File: {$dim_width}cm X {$dim_height}cm";
+    $text = "Dimensioni File: {$dim_width}cm X {$dim_height}cm";
     $pdf->SetFont("arial", "B", 30);
     $t_w = $pdf->GetStringWidth($text, "arial", "B", 30);
     $t_h = $pdf->getStringHeight($t_w, $text);
     $pdf->Text((($width / 2) - ($t_w / 2)), (($height / 2) - ($t_h / 2)), $text); // Print Final Text
 
     // Placing (Selected Dimension Text)
-    $text = "Dimension File: " . px_to_cm($width) . "cm X " . px_to_cm($height) . "cm";
+    $text = "Dimensioni Selezionate: " . px_to_cm($width) . "cm X " . px_to_cm($height) . "cm";
     $pdf->SetFont("arial", "B", 35);
     $t_w = $pdf->GetStringWidth($text, "arial", "B", 35);
     $t_h = $pdf->getStringHeight($t_w, $text);
