@@ -15,6 +15,9 @@ $hole_margin = isset($_GET['padding']) ? $_GET['padding'] : 30;
 $bolts = "";
 $bolt_image = "bolts/gold.png";
 
+// PDF
+define("PDF_OUTLINE_GAP", cm_to_px(0.4));
+
 
 // If holes enabled
 if ($holes) {
@@ -41,23 +44,51 @@ if ($holes) {
 }
 
 // Get SVG
-function get_svg($content)
+function get_svg($content, $type = "")
 {
     global $width, $height, $corner_radius;
 
+    $is_pdf = $type === 'pdf';
+    $gap = $is_pdf ? PDF_OUTLINE_GAP : 0;
+    $plate_x = $gap / 2;
+    $plate_y = $gap / 2;
+    $outline_w = $width + $gap;
+    $outline_h = $height + $gap;
+    $outline_radius = $corner_radius + ($gap / 2);
+    $corner_radius += $gap / 2;
+
+    $outline = <<<SVG
+                <!-- Outline -->
+                <rect 
+                x="0" 
+                y="0" 
+                width="{$outline_w}" 
+                height="{$outline_h}" 
+                rx="{$outline_radius}" 
+                ry="{$outline_radius}" 
+                fill="#ffffff" 
+                stroke="blue" 
+                stroke-width="1" 
+                />
+            SVG;
+
+    $outline = $is_pdf ? $outline : '';
+
     $svg = <<<BODY
-        <svg xmlns="http://www.w3.org/2000/svg" width="{$width}" height="{$height}" viewBox="0 0 {$width} {$height}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="{$outline_w}" height="{$outline_h}" viewBox="0 0 {$outline_w} {$outline_h}">
+            
+            {$outline}
             <!-- Plate -->
             <rect
-            x="0"
-            y="0"
+            x="{$plate_x}"
+            y="{$plate_y}"
             width="{$width}"
             height="{$height}"
             rx="{$corner_radius}"
             ry="{$corner_radius}"
             fill="#ffffff"
             stroke="#333"
-            storke-width="2"
+            storke-width="1"
             />
 
             {$content}
@@ -75,7 +106,7 @@ function download_mask()
     $svg = compress_svg($svg, "svg");
     $filename = generate_file_name("svg");
     file_put_contents("output/$filename", $svg);
-    return $filename;
+    return true;
 }
 
 // Download PNG 
@@ -93,40 +124,58 @@ function download_png()
 function download_pdf($svg, $png)
 {
     global $width, $height;
-    $orientation = ($width > $height) ? 'L' : 'P';
-    $filename = generate_file_name("pdf");
 
-    $pdf = new TCPDF($orientation, 'pt', [$width, $height]);
+    $pdf = new TCPDF(
+        (($width > $height) ? 'L' : 'P'), // Orientation
+        'pt',                             // Unit
+        [
+            $width + PDF_OUTLINE_GAP,     // Size
+            $height + PDF_OUTLINE_GAP    // Size
+        ]
+    );
+
     $pdf->setPrintHeader(false);
     $pdf->setPrintFooter(false);
     $pdf->SetAutoPageBreak(false, 0);
     $pdf->AddPage();
 
-    $pdf->ImageSVG("output/$svg", 0, 0, $width, $height); // Placing SVG
-    $pdf->Image("output/$png", 0, 0, $width, $height); // Placing PNG
+    $pdf->ImageSVG($svg, 0, 0, $width + PDF_OUTLINE_GAP, $height + PDF_OUTLINE_GAP); // Placing SVG
+    $pdf->Image($png, PDF_OUTLINE_GAP / 2, PDF_OUTLINE_GAP / 2, $width, $height); // Placing PNG
 
 
-    // Placing Targhe (Logo)
+    // Placing (Targhe Insegne) Logo
     $pdf->ImageSVG("logo.svg", ($width / 2) - (368 / 2), ($height / 2) - (368 / 2), 368, '', 'C', 'C', 0, false);
 
     // Placing (Dimension Text)
-    $width_cm = px_to_cm($width);
-    $height_cm = px_to_cm($height);
-    $text = "Dimension File: {$width_cm}cm X {$height_cm}cm";
+    $dim_width = px_to_cm($width + PDF_OUTLINE_GAP);
+    $dim_height = px_to_cm($height + PDF_OUTLINE_GAP);
+    $text = "Dimension File: {$dim_width}cm X {$dim_height}cm";
     $pdf->SetFont("arial", "B", 30);
     $t_w = $pdf->GetStringWidth($text, "arial", "B", 30);
     $t_h = $pdf->getStringHeight($t_w, $text);
     $pdf->Text((($width / 2) - ($t_w / 2)), (($height / 2) - ($t_h / 2)), $text); // Print Final Text
 
+    // Placing (Selected Dimension Text)
+    $text = "Dimension File: " . px_to_cm($width) . "cm X " . px_to_cm($height) . "cm";
+    $pdf->SetFont("arial", "B", 35);
+    $t_w = $pdf->GetStringWidth($text, "arial", "B", 35);
+    $t_h = $pdf->getStringHeight($t_w, $text);
+    $pdf->Text((($width / 2) - ($t_w / 2)), (($height / 2) - ($t_h / 2) + 50), $text); // Print Final Text
 
-    // Creating Output
-    $pdf->Output(__DIR__ . "/output/$filename", "F");
+
+    // Output PDF
+    $filename = generate_file_name("pdf", "/output/", true);
+    $pdf->Output(__DIR__ . $filename, "F");
 }
 
-
+@mkdir("output");
 clear_output_dir();
 
-@mkdir("output"); // Remove This if want to place at any other location
-$svg = download_mask();
+download_mask(); // Download Mask
 $png = download_png();
-download_pdf($svg, $png);
+$svg = get_svg($holes, "pdf");
+
+$filename = generate_file_name("svg", "output/", true);
+file_put_contents($filename, $svg);
+download_pdf($filename, "output/$png");
+@unlink($filename);
