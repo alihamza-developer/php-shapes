@@ -155,27 +155,22 @@ function download_pdf($svg, $png)
     $pdf->AddPage();
 
     $pdf->ImageSVG($svg, 0, 0, $width + PDF_OUTLINE_GAP, $height + PDF_OUTLINE_GAP); // Placing SVG
-    $pdf->Image($png, 0, 0, $width, $height); // Placing PNG
-
 
     // Placing (Targhe Insegne) Logo
-    $pdf->ImageSVG("logo.svg", ($width / 2) - (368 / 2), ($height / 2) - (368 / 2), 368, '', 'C', 'C', 0, false);
+    $pdf->ImageSVG("logo.svg", ($width / 2) - (368 / 2), ($height / 2) - 100, 368, 128, '', 'C', 'C', 0, false);
 
     // Placing (Dimension Text)
     $dim_width = px_to_cm($width + PDF_OUTLINE_GAP);
     $dim_height = px_to_cm($height + PDF_OUTLINE_GAP);
     $text = "Dimensioni File: {$dim_width}cm X {$dim_height}cm";
     $pdf->SetFont("arial", "B", 30);
-    $t_w = $pdf->GetStringWidth($text, "arial", "B", 30);
-    $t_h = $pdf->getStringHeight($t_w, $text);
-    $pdf->Text((($width / 2) - ($t_w / 2)), (($height / 2) - ($t_h / 2)), $text); // Print Final Text
 
-    // Placing (Selected Dimension Text)
-    $text = "Dimensioni Selezionate: " . px_to_cm($width) . "cm X " . px_to_cm($height) . "cm";
-    $pdf->SetFont("arial", "B", 35);
-    $t_w = $pdf->GetStringWidth($text, "arial", "B", 35);
-    $t_h = $pdf->getStringHeight($t_w, $text);
-    $pdf->Text((($width / 2) - ($t_w / 2)), (($height / 2) - ($t_h / 2) + 50), $text); // Print Final Text
+    $props = [0, 0, $text, 0, false, true, 0, 0, 'C', false, '', 0, false, 'T', 'C'];
+    $props[1] = ($height / 2) + 50;
+    $pdf->Text(...$props);
+    $props[1] += 40;
+    $props[2] = "Dimensioni Selezionate: " . px_to_cm($width) . "cm X " . px_to_cm($height) . "cm";
+    $pdf->Text(...$props);
 
 
     // Output PDF
