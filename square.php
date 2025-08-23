@@ -19,6 +19,8 @@ $bolt_image = "bolts/gold.png";
 define("PDF_OUTLINE_GAP", cm_to_px(0.4));
 
 
+define("OUTPUT_PATH", "output/"); // Define output path here
+
 // If holes enabled
 if ($holes) {
     $holes = "";
@@ -114,8 +116,9 @@ function download_mask()
     global $holes;
     $svg = get_svg($holes);
     $svg = compress_svg($svg, "svg");
-    $filename = generate_file_name("svg");
-    file_put_contents("output/$filename", $svg);
+    $filename = generate_file_name("svg", OUTPUT_PATH, true);
+    echo $filename;
+    file_put_contents($filename, $svg); // Svg Path
     return true;
 }
 
@@ -125,9 +128,9 @@ function download_png()
     global $bolts;
     $svg = get_svg($bolts, 'png');
 
-    $filename = generate_file_name("png");
+    $filename = generate_file_name("png", OUTPUT_PATH, true);
 
-    svg_to_png($svg, "output/{$filename}");
+    svg_to_png($svg, "{$filename}"); // PNG Path
     return $filename;
 }
 
@@ -175,18 +178,20 @@ function download_pdf($svg, $png)
 
 
     // Output PDF
-    $filename = generate_file_name("pdf", "/output/", true);
-    $pdf->Output(__DIR__ . $filename, "F");
+    $filename = generate_file_name("pdf", OUTPUT_PATH, true);
+    $pdf->Output(__DIR__ . '/' . $filename, "F");
 }
 
-@mkdir("output");
+@mkdir(OUTPUT_PATH);
 clear_output_dir();
 
 download_mask(); // Download Mask
 $png = download_png();
 $svg = get_svg($holes, "pdf");
 
-$filename = generate_file_name("svg", "output/", true);
+$filename = generate_file_name("svg", OUTPUT_PATH, true);
 file_put_contents($filename, $svg);
-download_pdf($filename, "output/$png");
+
+download_pdf($filename, $png); // Download PDF
+
 @unlink($filename);
