@@ -185,7 +185,6 @@ function download_pdf($svg, $png)
 }
 
 @mkdir(OUTPUT_PATH);
-clear_output_dir();
 
 $svg_file = download_mask(); // Download Mask
 $png = download_png();
