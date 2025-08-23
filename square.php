@@ -13,7 +13,8 @@ $hole_margin = isset($_GET['padding']) ? $_GET['padding'] : 30;
 
 // Bolts
 $bolts = "";
-$bolt_image = "bolts/gold.png";
+$spacer = $holes && isset($_GET['spacer']) ? $_GET['spacer'] : "";
+$bolt_image = "spacers/$spacer"; // Spacer Image
 
 // PDF
 define("PDF_OUTLINE_GAP", cm_to_px(0.4));
@@ -117,9 +118,9 @@ function download_mask()
     $svg = get_svg($holes);
     $svg = compress_svg($svg, "svg");
     $filename = generate_file_name("svg", OUTPUT_PATH, true);
-    echo $filename;
     file_put_contents($filename, $svg); // Svg Path
-    return true;
+
+    return $filename;
 }
 
 // Download PNG 
@@ -130,7 +131,7 @@ function download_png()
 
     $filename = generate_file_name("png", OUTPUT_PATH, true);
 
-    svg_to_png($svg, "{$filename}"); // PNG Path
+    svg_to_png($svg, $filename); // PNG Path
     return $filename;
 }
 
@@ -180,18 +181,26 @@ function download_pdf($svg, $png)
     // Output PDF
     $filename = generate_file_name("pdf", OUTPUT_PATH, true);
     $pdf->Output(__DIR__ . '/' . $filename, "F");
+    return $filename;
 }
 
 @mkdir(OUTPUT_PATH);
 clear_output_dir();
 
-download_mask(); // Download Mask
+$svg_file = download_mask(); // Download Mask
 $png = download_png();
 $svg = get_svg($holes, "pdf");
 
 $filename = generate_file_name("svg", OUTPUT_PATH, true);
 file_put_contents($filename, $svg);
 
-download_pdf($filename, $png); // Download PDF
+$pdf_file = download_pdf($filename, $png); // Download PDF
 
 @unlink($filename);
+
+
+echo json_encode([
+    'svg' => $svg_file,
+    'png' => $png,
+    'pdf' => $pdf_file
+]);

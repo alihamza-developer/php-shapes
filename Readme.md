@@ -13,3 +13,4 @@ type = (cornor,rounded)  Default cornor
 holes = (true,false) Required 
 hole_size = Default 37 (mm)
 hole_margin = Default 30 (px)
+spacer = (SPACER Image)
