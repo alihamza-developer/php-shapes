@@ -1,4 +1,5 @@
 <?php
+
 require_once "functions.php";
 
 $width = cm_to_px($_GET['width']); // 30 cm
