@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/vendor/autoload.php';
+
 define('INKSCAPE_PATH', '"C:\\Program Files\\Inkscape\\bin\\inkscape.exe"');
-// server path here when you setup ok
 
 // CM to PX
 function cm_to_px($cm)
@@ -19,6 +19,20 @@ function px_to_cm($px)
 function mm_to_px($mm)
 {
     return $mm * (96 / 25.4);
+}
+
+// Merge url or paths
+function merge_path(...$paths)
+{
+    $url = '';
+    foreach ($paths as $path) {
+        $path = trim($path);
+        $path = trim($path, '/');
+        if (strlen($path))
+            $url .= "/$path";
+    }
+    $url = trim($url, '/');
+    return $url;
 }
 
 // Compress SVG to single path
