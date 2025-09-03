@@ -183,8 +183,8 @@ function get_svg($content, $type = "")
     $plate_y = $gap / 2;
     $outline_w = $width + $gap;
     $outline_h = $height + $gap;
-    $outline_radius = $radius + ($gap / 2);
-    $radius += $gap / 2;
+    $outline_radius = $radius > 1 ? ($radius + ($gap / 2)) : 0;
+    $radius += $radius > 1 ? $gap / 2 : 0;
 
     $outline = <<<SVG
                 <!-- Outline -->
