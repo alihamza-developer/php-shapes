@@ -1,6 +1,6 @@
 <?php
 
-require_once "functions.php";
+require_once "includes/functions.php";
 
 define("PDF_OUTLINE_GAP", cm_to_px(0.4));
 define("OUTPUT_PATH", "output/");
@@ -279,7 +279,7 @@ function download_pdf($svg)
     $pdf->ImageSVG($svg, 0, 0, $width, $height); // Placing SVG
 
     // Placing (Targhe Insegne) Logo
-    $pdf->ImageSVG("logo.svg", ($width / 2) - (368 / 2), ($height / 2) - 100, 368, 128, '', 'C', 'C', 0, false);
+    $pdf->ImageSVG("assets/logo.svg", ($width / 2) - (368 / 2), ($height / 2) - 100, 368, 128, '', 'C', 'C', 0, false);
 
     // Placing (Dimension Text)
     $dim_width = px_to_cm($width + PDF_OUTLINE_GAP);
