@@ -193,7 +193,6 @@ function download_png()
     $spacer = $spacer ? merge_path(SPACERS_PATH, $spacer) : null;
     $spacers = generate($spacer);
     $svg = get_svg($spacers, 'png');
-    echo $svg;
     $name = generate_file_name("png", OUTPUT_PATH, false);
     $path = merge_path(OUTPUT_PATH, $name);
     svg_to_png($svg, $path); // PNG Path
