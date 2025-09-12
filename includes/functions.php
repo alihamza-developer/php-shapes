@@ -1,4 +1,5 @@
 <?php
+require_once "config.php";
 require_once 'vendor/autoload.php';
 
 define('INKSCAPE_PATH', '"C:\\Program Files\\Inkscape\\bin\\inkscape.exe"');
