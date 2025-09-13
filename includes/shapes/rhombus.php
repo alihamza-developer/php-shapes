@@ -8,13 +8,11 @@ function get_svg($holes = "", $type = "")
     global $width, $height, $radius;
 
     $is_pdf = ($type === 'pdf');
-    $is_png = ($type === 'png');
     $gap = $is_pdf ? $PDF_OUTLINE_GAP : 0;
     $cx = $width / 2;
     $cy = $height / 2;
     $inset = $is_pdf ? ($gap / 2) : 0;
 
-    // Plate corners
     $corners = [
         [$cx, $inset],                // top
         [$width - $inset, $cy],       // right
@@ -126,6 +124,7 @@ function get_svg($holes = "", $type = "")
 // Generate Rhombus Holes (same signature as other shapes)
 function generate($spacer = null, $gap = 0)
 {
+    $gap = 0;
     global $STROKE_WIDTH, $STROKE_COLOR;
     global $width, $height, $padding, $count, $size, $position, $direction;
 
@@ -231,71 +230,4 @@ function generate($spacer = null, $gap = 0)
     }
 
     return $out;
-}
-
-// Download Cliping Mask
-function download_svg()
-{
-    $holes = generate();
-    $svg = get_svg($holes);
-    $svg = compress_svg($svg, "svg");
-
-    $name = generate_file_name("svg", OUTPUT_PATH, false);
-    $path = merge_path(OUTPUT_PATH, $name);
-    file_put_contents($path, $svg); // Svg Path
-    return $name;
-}
-
-// Download PNG 
-function download_png()
-{
-    global $spacer;
-    $spacer_path = merge_path(SPACERS_PATH, $spacer);
-    if (!$spacer || !file_exists($spacer_path)) return false;
-    $svg = get_svg(generate($spacer_path), 'png');
-    $name = generate_file_name("png", OUTPUT_PATH, false);
-    $path = merge_path(OUTPUT_PATH, $name);
-    svg_to_png($svg, $path); // PNG Path
-    return $name;
-}
-
-// Download PDF
-function download_pdf($svg, $dir)
-{
-    global $width, $height, $PDF_OUTLINE_GAP;
-
-    $pdf = new TCPDF(
-        (($width > $height) ? 'L' : 'P'), // Orientation
-        'pt',                             // Unit
-        [$width, $height]
-    );
-
-    $pdf->setPrintHeader(false);
-    $pdf->setPrintFooter(false);
-    $pdf->SetAutoPageBreak(false, 0);
-    $pdf->AddPage();
-
-    $pdf->ImageSVG($svg, 0, 0, $width, $height); // Placing SVG
-
-    // Placing (Targhe Insegne) Logo
-    $pdf->ImageSVG("assets/logo.svg", ($width / 2) - (368 / 2), ($height / 2) - 100, 368, 128, '', 'C', 'C', 0, false);
-
-    // Placing (Dimension Text)
-    $dim_width = px_to_cm($width + $PDF_OUTLINE_GAP);
-    $dim_height = px_to_cm($height + $PDF_OUTLINE_GAP);
-    $text = "Dimensioni File: {$dim_width}cm X {$dim_height}cm";
-    $pdf->SetFont("arial", "B", 30);
-
-    $props = [0, 0, $text, 0, false, true, 0, 0, 'C', false, '', 0, false, 'T', 'C'];
-    $props[1] = ($height / 2) + 50;
-    $pdf->Text(...$props);
-    $props[1] += 40;
-    $props[2] = "Dimensioni Selezionate: " . px_to_cm($width) . "cm X " . px_to_cm($height) . "cm";
-    $pdf->Text(...$props);
-
-    // Output PDF
-    $filename = generate_file_name("pdf", OUTPUT_PATH, false);
-    $path = merge_path($dir, OUTPUT_PATH, $filename);
-    $pdf->Output($path, "F");
-    return $filename;
 }

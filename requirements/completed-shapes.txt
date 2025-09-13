@@ -1,0 +1,7 @@
+1. ROMBO
+    - Example URLS
+        - 1 Hole = http://localhost/php-shapes/rhombus.php?width=30&height=30&holes=1&spacer=gold.png&radius=10
+        - 2 Holes = http://localhost/php-shapes/rhombus.php?width=30&height=30&holes=2&direction=vertical&spacer=gold.png&radius=0
+        - 4 Holes = http://localhost/php-shapes/rhombus.php?width=30&height=30&holes=4&spacer=gold.png&radius=30
+
+2. 

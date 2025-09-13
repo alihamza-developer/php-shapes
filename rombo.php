@@ -15,16 +15,11 @@ $spacer = $_GET['spacer'] ?? false; // Spacer
 $position = $_GET['position'] ?? "";
 $direction = $_GET['direction'] ?? "vertical";
 
-clear_output_dir();
+
 # Download Process
 $svg = download_svg(); // Download SVG
 $png = download_png(); // Download PNG
-
-// Download PDF
-$temp_svg = generate_file_name("svg");
-file_put_contents($temp_svg, get_svg(generate(null), 'pdf'));
-$pdf = download_pdf($temp_svg, __DIR__); // Download PDF
-@unlink($temp_svg);
+$pdf = download_pdf(__DIR__); // Download PDF
 
 // Print Output Files
 echo json_encode([
