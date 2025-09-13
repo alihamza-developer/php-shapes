@@ -1,6 +1,6 @@
 <?php
-require_once "includes/shapes/circle.php";
 require_once "includes/functions.php";
+require_once "includes/shapes/circle.php";
 
 # For Circle
 $size = cm_to_px($_GET['size']);
@@ -15,7 +15,7 @@ $spacer = $_GET['spacer'] ?? null; // Spacer
 $position = $_GET['position'] ?? "";
 $direction = $_GET['direction'] ?? "vertical";
 
-clear_output_dir();
+
 $svg = download_svg(); // Download SVG
 $png = download_png(); // Download PNG
 $pdf = download_pdf(__DIR__); // Download PDF

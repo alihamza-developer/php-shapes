@@ -1,50 +1,56 @@
 <?php
 
-// Get SVG
-function get_svg($holes, $type = "")
+// Get SVG for Ellipse
+function get_svg($holes = "", $type = "")
 {
-    global $size, $PDF_OUTLINE_GAP, $PDF_OUTLINE_COLOR, $PDF_OUTLINE_WIDTH, $STROKE_WIDTH, $STROKE_COLOR;
+    global $PDF_OUTLINE_GAP, $PDF_OUTLINE_COLOR, $PDF_OUTLINE_WIDTH, $STROKE_WIDTH, $STROKE_COLOR;
 
+    global $width, $height;
     $is_pdf = $type === 'pdf';
-    $is_png = $type === 'png';
     $gap    = $is_pdf ? $PDF_OUTLINE_GAP : 0;
 
-    $cx = ($size + $gap) / 2;
-    $cy = ($size + $gap) / 2;
-    $r  = ($size / 2);
-    $r -= $is_pdf ? $PDF_OUTLINE_GAP + 2 : 2;
-    $outline_r = $r + ($gap / 2);
+    $cx = ($width + $gap) / 2;
+    $cy = ($height + $gap) / 2;
+    $rx = ($width / 2);
+    $ry = ($height / 2);
 
+    // Shrink to keep stroke inside
+    $rx -= $is_pdf ? $PDF_OUTLINE_GAP + 2 : 2;
+    $ry -= $is_pdf ? $PDF_OUTLINE_GAP + 2 : 2;
+
+    $outline_rx = $rx + ($gap / 2);
+    $outline_ry = $ry + ($gap / 2);
 
     // Outline only for PDF
     $outline = <<<SVG
         <!-- Outline -->
-        <circle 
+        <ellipse 
             cx="{$cx}" 
             cy="{$cy}" 
-            r="{$outline_r}" 
+            rx="{$outline_rx}" 
+            ry="{$outline_ry}" 
             fill="none" 
-            stroke="{$PDF_OUTLINE_COLOR}" 
+            stroke="{$PDF_OUTLINE_COLOR}"
             stroke-width="{$PDF_OUTLINE_WIDTH}"
         />
     SVG;
-
     $outline = $is_pdf ? $outline : '';
 
     $svg = <<<BODY
-        <svg xmlns="http://www.w3.org/2000/svg" width="{$size}" height="{$size}" viewBox="0 0 {$size} {$size}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="{$width}" height="{$height}" viewBox="0 0 {$width} {$height}">
             {$outline}
 
-            <!-- Circle -->
-            <circle
+            <!-- Ellipse -->
+            <ellipse
                 cx="{$cx}"
                 cy="{$cy}"
-                r="{$r}"
+                rx="{$rx}"
+                ry="{$ry}"
                 stroke="{$STROKE_COLOR}"
                 stroke-width="{$STROKE_WIDTH}"
                 fill="none"
             />
-
+            
             {$holes}
         </svg>
     BODY;
@@ -52,33 +58,29 @@ function get_svg($holes, $type = "")
     return $svg;
 }
 
-// Generate Holes For Circle
+// Generate Holes For Ellipse
 function generate($spacer = null, $gap = 0)
 {
-    global $STROKE_WIDTH, $STROKE_COLOR;
-    global $size, $padding, $count, $hole_size, $position, $direction;
+    global $width, $height, $padding, $count, $hole_size, $position, $direction, $STROKE_COLOR, $STROKE_WIDTH;
 
-    $cx = $size / 2;
-    $cy = $size / 2;
-    $radius = ($size / 2) - $padding;
-    $r = $hole_size / 2;
+    $cx = $width / 2;
+    $cy = $height / 2;
+    $rx = ($width / 2) - $padding;   // horizontal radius
+    $ry = ($height / 2) - $padding;  // vertical radius
+    $r  = $hole_size / 2;
 
     $gx = $gap / 2;
     $gy = $gap / 2;
 
-    // Normalizer
+    // Normalize inputs
     $norm = static function ($s): string {
         $s = strtolower((string)$s);
         return str_replace(['-', '_', ' '], '', $s);
     };
-
     $dir = $norm($direction);
     if ($dir === 'h') $dir = 'horizontal';
     if ($dir === 'v') $dir = 'vertical';
-
     $pos = $norm($position ?? 'top');
-
-    // Aliases
     $aliases = [
         'top'    => 'topcenter',
         'bottom' => 'bottomcenter',
@@ -87,7 +89,7 @@ function generate($spacer = null, $gap = 0)
     ];
     $pos = $aliases[$pos] ?? $pos;
 
-    // Helper to generate SVG for a hole
+    // Hole generator
     $make = static function ($x, $y) use ($r, $hole_size, $spacer, $gx, $gy, $STROKE_COLOR, $STROKE_WIDTH): string {
         $x += $gx ?? 0;
         $y += $gy ?? 0;
@@ -104,46 +106,37 @@ function generate($spacer = null, $gap = 0)
     $out = '';
 
     switch ((int)$count) {
-
         case 1: {
-                $offset = $radius - $padding;
-
                 $map = [
-                    'topcenter'    => [$cx, $cy - $offset],
-                    'bottomcenter' => [$cx, $cy + $offset],
-                    'leftcenter'   => [$cx - $offset, $cy],
-                    'rightcenter'  => [$cx + $offset, $cy],
+                    'topcenter'    => [$cx, $cy - $ry],
+                    'bottomcenter' => [$cx, $cy + $ry],
+                    'leftcenter'   => [$cx - $rx, $cy],
+                    'rightcenter'  => [$cx + $rx, $cy],
+                    'center'       => [$cx, $cy],
                 ];
-
                 [$x, $y] = $map[$pos] ?? $map['topcenter'];
                 $out .= $make($x, $y);
                 break;
             }
 
         case 2: {
-                $offset = $radius - $padding; // pull holes inward
-
                 if ($dir === 'horizontal') {
-                    $out .= $make($cx - $offset, $cy);
-                    $out .= $make($cx + $offset, $cy);
+                    $out .= $make($cx - $rx, $cy);
+                    $out .= $make($cx + $rx, $cy);
                 } else { // vertical
-                    $out .= $make($cx, $cy - $offset);
-                    $out .= $make($cx, $cy + $offset);
+                    $out .= $make($cx, $cy - $ry);
+                    $out .= $make($cx, $cy + $ry);
                 }
                 break;
             }
 
-
         case 4: {
-                $offset = $radius - $padding;
-
                 $coords = [
-                    [$cx, $cy - $offset], // top
-                    [$cx + $offset, $cy], // right
-                    [$cx, $cy + $offset], // bottom
-                    [$cx - $offset, $cy], // left
+                    [$cx, $cy - $ry], // top
+                    [$cx + $rx, $cy], // right
+                    [$cx, $cy + $ry], // bottom
+                    [$cx - $rx, $cy], // left
                 ];
-
                 foreach ($coords as [$x, $y]) {
                     $out .= $make($x, $y);
                 }
