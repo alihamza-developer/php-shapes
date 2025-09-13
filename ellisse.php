@@ -2,8 +2,8 @@
 require_once "includes/shapes/ellipse.php";
 require_once "includes/functions.php";
 // For Circle
-$width = cm_to_px($_GET['width']); // 30 cm
-$height = cm_to_px($_GET['height']); // 20 cm
+$width = cm_to_px($_GET['width']); // cm
+$height = cm_to_px($_GET['height']); // cm
 $padding = $_GET['padding'] ?? 50; // px
 
 // Holes Info

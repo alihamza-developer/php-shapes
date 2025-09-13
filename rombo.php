@@ -3,8 +3,8 @@ require_once "includes/functions.php";
 require_once "includes/shapes/rhombus.php";
 
 // For Plate
-$width = cm_to_px($_GET['width']); // 30 cm
-$height = cm_to_px($_GET['height']); // 20 cm
+$width = cm_to_px($_GET['width']); // cm
+$height = cm_to_px($_GET['height']); // cm
 $radius = $_GET['radius'] ?? 0; // px
 $padding = $_GET['padding'] ?? 70; // px
 
