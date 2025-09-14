@@ -6,7 +6,6 @@ function get_svg($holes, $type = "")
     global $size, $PDF_OUTLINE_GAP, $PDF_OUTLINE_COLOR, $PDF_OUTLINE_WIDTH, $STROKE_WIDTH, $STROKE_COLOR;
 
     $is_pdf = $type === 'pdf';
-    $is_png = $type === 'png';
     $gap    = $is_pdf ? $PDF_OUTLINE_GAP : 0;
 
     $cx = ($size + $gap) / 2;

@@ -18,3 +18,9 @@
         - 2 Hole (vertical) = http://localhost/php-shapes/cerchio.php?size=30&holes=2&spacer=gold.png
         - 2 Hole (horizontal) = http://localhost/php-shapes/cerchio.php?size=30&holes=2&spacer=gold.png&direction=horizontal
         - 1 Hole = http://localhost/php-shapes/cerchio.php?size=30&holes=1&spacer=gold.png
+
+4. ELLISSE MODERNA
+    - Example URLS
+        - 4 Hole = http://localhost/php-shapes/ellisse-moderna.php?width=30&height=20&holes=4&spacer=gold.png
+        - 2 Hole (vertical) = http://localhost/php-shapes/ellisse-moderna.php?width=30&height=20&holes=2&spacer=gold.png
+        - 2 Hole (horizontal) = http://localhost/php-shapes/ellisse-moderna.php?width=30&height=20&holes=2&direction=horizontal&spacer=gold.png
