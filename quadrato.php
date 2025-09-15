@@ -1,6 +1,5 @@
 <?php
 require_once "includes/functions.php";
-require_once "includes/shapes/square.php";
 
 // For Plate
 $width = cm_to_px($_GET['width']); // cm

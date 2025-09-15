@@ -7,7 +7,7 @@ $padding = $_GET['padding'] ?? 50; // px
 
 // Holes Info
 $count = intval($_GET['holes'] ?? 0); // (1,2,4)
-$hole_size = mm_to_px($_GET['hole_size'] ?? 10); // mm
+$size = mm_to_px($_GET['size'] ?? 10); // mm
 $spacer = $_GET['spacer'] ?? null; // Spacer
 $position = $_GET['position'] ?? "";
 $direction = $_GET['direction'] ?? "vertical";
@@ -76,13 +76,13 @@ function get_svg($holes = "", $type = "")
 // Generate Holes For Ellipse
 function generate($spacer = null, $gap = 0)
 {
-    global $width, $height, $padding, $count, $hole_size, $position, $direction, $STROKE_COLOR, $STROKE_WIDTH;
+    global $width, $height, $padding, $count, $size, $position, $direction, $STROKE_COLOR, $STROKE_WIDTH;
 
     $cx = $width / 2;
     $cy = $height / 2;
     $rx = ($width / 2) - $padding;   // horizontal radius
     $ry = ($height / 2) - $padding;  // vertical radius
-    $r  = $hole_size / 2;
+    $r  = $size / 2;
 
     $gx = $gap / 2;
     $gy = $gap / 2;
@@ -105,14 +105,14 @@ function generate($spacer = null, $gap = 0)
     $pos = $aliases[$pos] ?? $pos;
 
     // Hole generator
-    $make = static function ($x, $y) use ($r, $hole_size, $spacer, $gx, $gy, $STROKE_COLOR, $STROKE_WIDTH): string {
+    $make = static function ($x, $y) use ($r, $size, $spacer, $gx, $gy, $STROKE_COLOR, $STROKE_WIDTH): string {
         $x += $gx ?? 0;
         $y += $gy ?? 0;
 
         if (!empty($spacer)) {
-            $xPos = $x - $hole_size / 2;
-            $yPos = $y - $hole_size / 2;
-            return "<image href='{$spacer}' x='{$xPos}' y='{$yPos}' width='{$hole_size}' height='{$hole_size}' />";
+            $xPos = $x - $size / 2;
+            $yPos = $y - $size / 2;
+            return "<image href='{$spacer}' x='{$xPos}' y='{$yPos}' width='{$size}' height='{$size}' />";
         }
 
         return "<circle stroke='{$STROKE_COLOR}' stroke-width='{$STROKE_WIDTH}' cx='{$x}' cy='{$y}' r='{$r}' fill='none' />";
@@ -165,8 +165,6 @@ function generate($spacer = null, $gap = 0)
 
     return $out;
 }
-
-
 
 
 $svg = download_svg(); // Download SVG
