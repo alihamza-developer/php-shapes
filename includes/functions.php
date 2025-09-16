@@ -252,7 +252,7 @@ function download_pdf($dir)
 // Download Cliping Mask
 function download_svg()
 {
-    $holes = generate();
+    $holes = get_spacer() ? "" : generate();
     $svg = get_svg($holes);
     $svg = compress_svg($svg, "svg");
 
@@ -265,12 +265,24 @@ function download_svg()
 // Download PNG 
 function download_png()
 {
-    global $spacer;
-    $spacer_path = merge_path(SPACERS_PATH, $spacer);
-    if (!$spacer || !file_exists($spacer_path)) return false;
-    $svg = get_svg(generate($spacer_path), 'png');
+    $spacer = get_spacer();
+    if (!$spacer) return false;
+    $svg = get_svg(generate($spacer), 'png');
     $name = generate_file_name("png", OUTPUT_PATH, false);
     $path = merge_path(OUTPUT_PATH, $name);
     svg_to_png($svg, $path); // PNG Path
     return $name;
+}
+// Get Spacer
+function get_spacer()
+{
+    global $spacer;
+    $spacer_path = merge_path(SPACERS_PATH, $spacer);
+    if (!$spacer || !file_exists($spacer_path)) return false;
+    return $spacer_path;
+}
+
+function get_per($value, $percent)
+{
+    return ($value * $percent) / 100;
 }
