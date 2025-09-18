@@ -1,28 +1,28 @@
 <?php
 require_once "includes/functions.php";
-
 // For Plate
 $width = cm_to_px($_GET['width']); // cm
 $height = cm_to_px($_GET['height']); // cm
 $radius = $_GET['radius'] ?? 0; // px
-$padding = $_GET['padding'] ?? 50; // px
+$padding = $_GET['padding'] ?? 30; // px
 
 // For Holes
 $count = intval($_GET['holes'] ?? 0); // (1,2,4,6)
 $size = mm_to_px($_GET['size'] ?? 10); // mm
 $spacer = $_GET['spacer'] ?? false; // Spacer
 $position = $_GET['position'] ?? "";
+$direction = $_GET['direction'] ?? "";
 
 
 // Get Path
 function get_path()
 {
     global $width, $height;
-    $cords = "M264 793l-132 0c-11,0 -23,-4 -31,-13 -8,-8 -13,-19 -13,-31l0 -88c-117,-123 -117,-317 0,-440l0 -89c0,-11 5,-23 13,-31 8,-8 20,-13 31,-13l132 0c252,-117 542,-117 794,0l132 0c11,0 23,5 31,13 8,8 13,20 13,31l0 89c117,123 117,317 0,440l0 88c0,12 -5,23 -13,31 -8,9 -20,13 -31,13l-132 0c-252,118 -542,118 -794,0z";
+    $cords = "M269 40c-86,-27 -176,-41 -266,-40 -2,0 -3,1 -3,3 -1,90 13,180 40,266l0 59c-27,86 -41,176 -40,266 0,1 1,3 3,3 90,0 180,-13 266,-40l59 0c86,27 176,40 266,40 1,0 3,-2 3,-3 0,-90 -13,-180 -40,-266l0 -59c27,-86 40,-176 40,-266 0,-2 -2,-3 -3,-3 -90,-1 -180,13 -266,40l-59 0z";
     $path = preg_replace_callback('/-?\d+\.?\d*/', function ($m) use ($width, $height) {
         static $is_x = true;
-        $scale_x = $width / 1322;
-        $scale_y = $height / 882;
+        $scale_x = $width / 597;
+        $scale_y = $height / 597;
         $val = (float)$m[0];
         if ($is_x) $val *= $scale_x;
         else $val *= $scale_y;
@@ -72,7 +72,7 @@ function get_svg($holes = "", $type = "")
 function generate($spacer = null, $gap = 0)
 {
     global $STROKE_WIDTH, $STROKE_COLOR;
-    global $width, $height, $padding, $count, $size, $position;
+    global $width, $height, $padding, $count, $size, $position, $direction;
 
     $path = get_path();
     preg_match_all('/-?\d+\.?\d*/', $path, $matches);
@@ -98,31 +98,50 @@ function generate($spacer = null, $gap = 0)
         return "<circle stroke='{$STROKE_COLOR}' stroke-width='{$STROKE_WIDTH}' cx='{$x}' cy='{$y}' r='{$r}' fill='none' />";
     };
 
-    $x_cord = abs($cords[18]);
-    $y_cord = abs($cords[41]);
+
+    $x_cord = abs($cords[66]);
+    $y_cord = abs($cords[5]);
 
 
     $out = '';
 
     switch ((int)$count) {
-
+        case 1:
+            $out .= $make($width / 2, $y_cord + $r + $padding);
+            break;
         case 2:
-            if ($position == 'top') {
-                $out .= $make($x_cord + $padding, $y_cord + $padding);
-                $out .= $make(($width - $x_cord) - $padding, $y_cord + $padding);
+
+            if ($direction === 'horizontal') {
+
+                // 2 top corners
+                if ($position == 'bottom') {
+                    // 2 bottom corners
+                    $out .= $make($width - ($r + $padding), $height - ($r + $padding));
+                    $out .= $make($r + $padding, $height - ($r + $padding));
+                } else if ($position == 'center') {
+
+                    // 2 center corners
+                    $out .= $make(($r + $padding + $x_cord), $height / 2);
+                    $out .= $make($width - ($r + $padding + $x_cord), $height / 2);
+                } else {
+                    $out .= $make($r + $padding, $r + $padding);
+                    $out .= $make($width - ($r + $padding), $r + $padding);
+                }
             } else {
-                $out .= $make($x_cord + $padding, ($height -  $y_cord) - $padding);
-                $out .= $make(($width - $x_cord) - $padding, ($height -  $y_cord) - $padding);
+                $out .= $make($width / 2, $y_cord + $r + $padding);
+                $out .= $make($width / 2, $height - ($y_cord + $r + $padding));
             }
+
             break;
 
         case 4:
-            // Four corners
-            $out .= $make($x_cord + $padding, $y_cord + $padding);
-            $out .= $make(($width - $x_cord) - $padding, $y_cord + $padding);
+            // 2 Top Corners
+            $out .= $make($r + $padding, $r + $padding);
+            $out .= $make($width - ($r + $padding), $r + $padding);
 
-            $out .= $make($x_cord + $padding, ($height -  $y_cord) - $padding);
-            $out .= $make(($width - $x_cord) - $padding, ($height -  $y_cord) - $padding);
+            // 2 Bottom Corners
+            $out .= $make($width - ($r + $padding), $height - ($r + $padding));
+            $out .= $make($r + $padding, $height - ($r + $padding));
             break;
 
         default:
@@ -132,6 +151,7 @@ function generate($spacer = null, $gap = 0)
 
     return $out;
 }
+
 
 # Download Process
 $svg = download_svg(); // Download SVG

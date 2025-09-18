@@ -136,7 +136,7 @@ function compress_svg($svg)
 
     // Build final <svg>
     $newSvg = "<svg xmlns='http://www.w3.org/2000/svg' width='{$width}' height='{$height}' viewBox='0 0 {$width} {$height}'>
-        <path d='{$pathData}' fill='#333' stroke='black' fill-rule='evenodd'/>
+        <path d='{$pathData}' id='drawing-area' fill='#333' stroke='black' fill-rule='evenodd'/>
     </svg>";
 
     return $newSvg;
