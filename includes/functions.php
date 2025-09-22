@@ -7,6 +7,9 @@ $PDF_OUTLINE_COLOR = "blue";
 $PDF_OUTLINE_WIDTH = "0.33578";
 $STROKE_WIDTH = 0.33578;
 $STROKE_COLOR = "#2B2A29";
+$FILL_PATH_GAP = mm_to_px(25);
+$FILL_P_STROKE_COLOR = "red";
+$FILL_P_STROKE_WIDTH = 1;
 
 define("OUTPUT_PATH", "output/");
 define("SPACERS_PATH", "./spacers");
@@ -210,7 +213,8 @@ function download_pdf($dir)
 {
     global $width, $height, $PDF_OUTLINE_GAP;
     $svg = generate_file_name("svg");
-    file_put_contents($svg, get_svg(generate(null, $PDF_OUTLINE_GAP), 'pdf'));
+    $holes = generate(null, $PDF_OUTLINE_GAP);
+    file_put_contents($svg, get_svg($holes, 'pdf'));
 
     $pdf = new TCPDF(
         (($width > $height) ? 'L' : 'P'), // Orientation
@@ -250,11 +254,11 @@ function download_pdf($dir)
 }
 
 // Download Cliping Mask
-function download_svg()
+function download_svg($compress = true)
 {
     $holes = get_spacer() ? "" : generate();
     $svg = get_svg($holes);
-    $svg = compress_svg($svg, "svg");
+    if ($compress) $svg = compress_svg($svg, "svg");
 
     $name = generate_file_name("svg", OUTPUT_PATH, false);
     $path = merge_path(OUTPUT_PATH, $name);
