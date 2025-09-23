@@ -171,6 +171,8 @@ function generate($spacer = null, $gap = 0): string
 function get_svg($holes, $type = "")
 {
     global $PDF_OUTLINE_GAP, $width, $height, $radius, $PDF_OUTLINE_COLOR, $PDF_OUTLINE_WIDTH, $STROKE_WIDTH, $STROKE_COLOR;
+    global $FILL_PATH_GAP, $size, $padding, $FILL_P_STROKE_COLOR, $FILL_P_STROKE_WIDTH;
+
 
     $is_pdf = $type === 'pdf';
     $is_png = $type === 'png';
@@ -198,11 +200,24 @@ function get_svg($holes, $type = "")
             SVG;
 
     $outline = $is_pdf ? $outline : '';
-    $props = $is_png ? "" : "stroke='{$STROKE_COLOR}' storke-width='{$STROKE_WIDTH}'";
+
+
+    $r_w = $width - ($FILL_PATH_GAP + $size);
+    $r_h = $height - ($FILL_PATH_GAP + $size);
+
+    $r_x = $width / 2 - ($r_w / 2);
+    $r_y = $height / 2 - ($r_h / 2);
+
+    $fill = $is_pdf ? "none" : "#000";
+    $stroke = $is_pdf ? "stroke='{$FILL_P_STROKE_COLOR}' stroke-width='{$FILL_P_STROKE_WIDTH}'" : "";
+
+    $fill_r = $type == 'png' ? '' : "<rect rx='{$radius}' ry='{$radius}' x='{$r_x}' y='{$r_y}' width='{$r_w}' height='{$r_h}' {$stroke} fill='{$fill}' />";
+
+
 
     $svg = <<<BODY
         <svg xmlns="http://www.w3.org/2000/svg" width="{$outline_w}" height="{$outline_h}" viewBox="0 0 {$outline_w} {$outline_h}">
-            
+            {$fill_r}
             {$outline}
             <!-- Plate -->
             <rect
@@ -213,7 +228,8 @@ function get_svg($holes, $type = "")
             rx="{$radius}"
             ry="{$radius}"
             fill="none"
-            {$props}
+            stroke='{$STROKE_COLOR}'
+            storke-width='{$STROKE_WIDTH}'
             />
 
             {$holes}
@@ -224,7 +240,7 @@ function get_svg($holes, $type = "")
 }
 
 
-$svg = download_svg(); # Download SVG
+$svg = download_svg(false); # Download SVG
 $png = download_png(); # Download PNG
 $pdf = download_pdf(__DIR__); # Download PDF
 
