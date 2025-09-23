@@ -15,9 +15,8 @@ $direction = $_GET['direction'] ?? "";
 
 
 // Get Path
-function get_path()
+function get_path($width, $height)
 {
-    global $width, $height;
     $cords = "M269 40c-86,-27 -176,-41 -266,-40 -2,0 -3,1 -3,3 -1,90 13,180 40,266l0 59c-27,86 -41,176 -40,266 0,1 1,3 3,3 90,0 180,-13 266,-40l59 0c86,27 176,40 266,40 1,0 3,-2 3,-3 0,-90 -13,-180 -40,-266l0 -59c27,-86 40,-176 40,-266 0,-2 -2,-3 -3,-3 -90,-1 -180,13 -266,40l-59 0z";
     $path = preg_replace_callback('/-?\d+\.?\d*/', function ($m) use ($width, $height) {
         static $is_x = true;
@@ -37,15 +36,16 @@ function get_svg($holes = "", $type = "")
 {
     global $PDF_OUTLINE_GAP, $PDF_OUTLINE_COLOR, $PDF_OUTLINE_WIDTH, $STROKE_COLOR, $STROKE_WIDTH;
     global $width, $height;
+    global $FILL_PATH_GAP, $size, $padding, $FILL_P_STROKE_COLOR, $FILL_P_STROKE_WIDTH;
 
     $is_pdf = ($type === 'pdf');
-    $path = get_path();
+    $path = get_path($width, $height);
 
     // Padding transform for PDF
-    $padding = $is_pdf ? $PDF_OUTLINE_GAP - 5 : 0;
-    $scale_x = ($width - 2 * $padding) / $width;
-    $scale_y = ($height - 2 * $padding) / $height;
-    $translate = $padding;
+    $padding_ = $is_pdf ? $PDF_OUTLINE_GAP - 5 : 0;
+    $scale_x = ($width - 2 * $padding_) / $width;
+    $scale_y = ($height - 2 * $padding_) / $height;
+    $translate = $padding_;
 
     // Outline
     $outline = $is_pdf ? "<path d='{$path}' stroke='{$PDF_OUTLINE_COLOR}' stroke-width='{$PDF_OUTLINE_WIDTH}' fill='none' />" : "";
@@ -53,10 +53,24 @@ function get_svg($holes = "", $type = "")
     $group_start = $is_pdf ? "<g transform='translate({$translate},{$translate}) scale({$scale_x},{$scale_y})'>" : '';
     $group_end = $is_pdf ? "</g>" : "";
 
+
+
+    $f_width = $width - ($FILL_PATH_GAP + $size + $padding + ($is_pdf ? $PDF_OUTLINE_GAP : 0) + 10);
+    $f_height = $height - ($FILL_PATH_GAP + $size + $padding + ($is_pdf ? $PDF_OUTLINE_GAP : 0) + 10);
+    $path_fill = get_path($f_width, $f_height);
+    $f_x = $width / 2 - ($f_width / 2);
+    $f_y = $height / 2 - ($f_height / 2);
+    $fill = $is_pdf ? "none" : "#000";
+    $stroke = $is_pdf ? "stroke='{$FILL_P_STROKE_COLOR}' stroke-width='{$FILL_P_STROKE_WIDTH}'" : "";
+    $fill_path_final = $type == "png" ? "" : "<g transform='translate($f_x,$f_y)'><path d='{$path_fill}' fill='{$fill}' {$stroke} /></g>";
+
+
+
     // Final SVG
     $svg = <<<SVG
     <svg xmlns="http://www.w3.org/2000/svg" width="{$width}" height="{$height}" viewBox="0 0 {$width} {$height}">
         {$outline}
+        {$fill_path_final}
         {$holes}
 
         {$group_start}
@@ -153,7 +167,7 @@ function generate($spacer = null, $gap = 0)
 
 
 # Download Process
-$svg = download_svg(); // Download SVG
+$svg = download_svg(false); // Download SVG
 $png = download_png(); // Download PNG
 $pdf = download_pdf(__DIR__); // Download PDF
 
