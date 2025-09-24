@@ -139,122 +139,81 @@ function get_svg($holes = "", $type = "")
 // Generate Rhombus Holes (same signature as other shapes)
 function generate($spacer = null, $gap = 0)
 {
-    $gap = 0;
-    global $STROKE_WIDTH, $STROKE_COLOR;
-    global $width, $height, $padding, $count, $size, $position, $direction;
+    global $direction, $count;
 
-    $cx = $width / 2;
-    $cy = $height / 2;
-
-    // global offsets
-    $gx = $gap / 2;
-    $gy = $gap / 2;
-
-    $r = $size / 2;
-
-    $norm = static function ($s): string {
-        $s = strtolower((string)$s);
-        return str_replace(['-', '_', ' '], '', $s);
-    };
-
-    $dir = $norm($direction);
-    if ($dir === 'h') $dir = 'horizontal';
-    if ($dir === 'v') $dir = 'vertical';
-
-    $pos = $norm($position ?? 'top');
-
-    $aliases = [
-        'tc' => 'top',
-        'topcenter' => 'top',
-        'top' => 'top',
-        'bc' => 'bottom',
-        'bottomcenter' => 'bottom',
-        'bottom' => 'bottom',
-        'lc' => 'left',
-        'leftcenter' => 'left',
-        'left' => 'left',
-        'rc' => 'right',
-        'rightcenter' => 'right',
-        'right' => 'right',
-        'c' => 'center',
-        'center' => 'center',
-        'mid' => 'center',
-        'middle' => 'center'
-    ];
-    $pos = $aliases[$pos] ?? $pos;
-
-    // Hole maker
-    $make = static function ($x, $y) use ($r, $size, $spacer, $gx, $gy, $STROKE_WIDTH, $STROKE_COLOR): string {
-        $x += $gx ?? 0;
-        $y += $gy ?? 0;
-
-        if (!empty($spacer)) {
-            $xPos = $x - ($size / 2);
-            $yPos = $y - ($size / 2);
-            return "<image href=\"{$spacer}\" x=\"{$xPos}\" y=\"{$yPos}\" width=\"{$size}\" height=\"{$size}\" preserveAspectRatio=\"xMidYMid meet\" />";
-        }
-
-        return "<circle stroke='{$STROKE_COLOR}' stroke-width='{$STROKE_WIDTH}' cx='{$x}' cy='{$y}' r='{$r}' fill='none' />";
-    };
-
-    $inset_x = $gx;
-    $inset_y = $gy;
-
-    $top_y    = $inset_y + ($padding ?? 0);
-    $bottom_y = $height - $inset_y - ($padding ?? 0);
-    $left_x   = $inset_x + ($padding ?? 0);
-    $right_x  = $width - $inset_x - ($padding ?? 0);
-
-    $map = [
-        'top'    => [$cx, $top_y],
-        'bottom' => [$cx, $bottom_y],
-        'left'   => [$left_x, $cy],
-        'right'  => [$right_x, $cy],
-        'center' => [$cx, $cy],
-    ];
-
-    $out = '';
-
+    $positions = ['t', 'l', 'b', 'r'];
     switch ((int)$count) {
         case 1:
-            [$x, $y] = $map[$pos] ?? $map['top'];
-            $out .= $make($x, $y);
+            $positions = ['t'];
             break;
 
         case 2:
-            if ($dir === 'horizontal') {
-                // left + right
-                $out .= $make(...$map['left']);
-                $out .= $make(...$map['right']);
-            } else { // vertical (default)
-                // top + bottom
-                $out .= $make(...$map['top']);
-                $out .= $make(...$map['bottom']);
-            }
+            $positions = $direction === 'horizontal' ? ['l', 'r'] : ['t', 'b'];
             break;
-
-        case 4:
-            foreach (['top', 'right', 'bottom', 'left'] as $k) {
-                $out .= $make(...$map[$k]);
-            }
-            break;
-
         default:
             // unsupported count -> no holes
             break;
     }
 
+
+    $out = '';
+    foreach ($positions as $pos) {
+        $out .= get_hole([
+            'spacer' => $spacer,
+            'pos' => $pos,
+            'pdf_gap' => $gap
+        ]);
+    }
+
     return $out;
 }
 
-# Download Process
-$svg = download_svg(); // Download SVG
-$png = download_png(); // Download PNG
-$pdf = download_pdf(__DIR__); // Download PDF
+# Get Hole
+function get_hole($data)
+{
+    global $padding, $width, $height, $size;
 
-// Print Output Files
-echo json_encode([
-    'svg' => $svg,
-    'png' => $png,
-    'pdf' => $pdf
+    $spacer = $data['spacer'];
+    $pos = $data['pos'];
+    $pdf_gap = $data['pdf_gap'];
+
+
+    $r = $size / 2;
+    $gap = $padding + $r + $pdf_gap;
+
+    $x = 0;
+    $y = 0;
+    switch ($pos) {
+        case 't':
+            $x = $width / 2;
+            $y += $gap;
+            break;
+        case 'l':
+            $x = $gap;
+            $y = $height / 2;
+            break;
+        case 'b':
+            $x = $width / 2;
+            $y = $height - $gap;
+            break;
+        case 'r':
+            $x = $width - $gap;
+            $y += $height / 2;
+            break;
+
+        default:
+            # code...
+            break;
+    }
+
+    return make_hole([
+        'x' => $x,
+        'y' => $y,
+        'spacer' => $spacer,
+    ]);
+}
+
+# Start Downloader
+start_downloader([
+    'dir' => __DIR__
 ]);
