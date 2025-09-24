@@ -311,3 +311,22 @@ function make_hole($data)
     $r = $size / 2;
     return "<circle stroke='{$STROKE_COLOR}' stroke-width='{$STROKE_WIDTH}' cx='{$x}' cy='{$y}' r='{$r}' fill='none' />";
 }
+
+# Get Resized Path
+function get_resized_path($width, $height)
+{
+    global $BASE_PATH, $PATH_WIDTH, $PATH_HEIGHT;
+
+    $path = preg_replace_callback('/-?\d+\.?\d*/', function ($m) use ($width, $height, $PATH_WIDTH, $PATH_HEIGHT) {
+        static $is_x = true;
+        $scale_x = $width / $PATH_WIDTH;
+        $scale_y = $height /  $PATH_HEIGHT;
+        $val = (float)$m[0];
+        if ($is_x) $val *= $scale_x;
+        else $val *= $scale_y;
+        $is_x = !$is_x;
+        return $val;
+    }, $BASE_PATH);
+
+    return $path;
+}
