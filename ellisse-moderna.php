@@ -72,78 +72,83 @@ function get_svg($holes = "", $type = "")
     return $svg;
 }
 
-// Generate Holes for the curved-top/bottom plate (supports 2 and 4 holes)
-function generate($spacer = null, $gap = 0): string
+function generate($spacer = null, $gap = 0)
 {
-    global $width, $height, $padding, $count, $size, $position, $direction;
-    global $STROKE_COLOR, $STROKE_WIDTH, $CURVE;
+    global $count, $direction;
 
-    $r = $size / 2;
-    $gx = $gap / 2;
-    $gy = $gap / 2;
+    $positions = [
+        'tl',
+        'tr',
+        'bl',
+        'br'
+    ];
 
+    if ($count === 2)
+        $positions = ($direction == 'vertical') ? ['tc', 'bc'] : ['lc', 'rc'];
 
-    // Normalizer & aliases (same style as square generator)
-    $norm = static function ($s): string {
-        $s = strtolower((string)$s);
-        return str_replace(['-', '_', ' '], '', $s);
-    };
-
-    $dir = $norm($direction);
-    if ($dir === 'h') $dir = 'horizontal';
-    if ($dir === 'v') $dir = 'vertical';
-
-    // Hole maker (image or circle). apply gap offsets inside.
-    $make = static function ($x, $y) use ($r, $size, $spacer, $gx, $gy, $STROKE_COLOR, $STROKE_WIDTH): string {
-
-        if (!empty($spacer)) {
-            $xPos = $x - $size / 2;
-            $yPos = $y - $size / 2;
-            return "<image href=\"{$spacer}\" x=\"{$xPos}\" y=\"{$yPos}\" width=\"{$size}\" height=\"{$size}\" preserveAspectRatio=\"xMidYMid meet\" />";
-        }
-
-        return "<circle stroke=\"{$STROKE_COLOR}\" stroke-width=\"{$STROKE_WIDTH}\" cx=\"{$x}\" cy=\"{$y}\" r=\"{$r}\" fill=\"none\" />";
-    };
 
     $out = '';
+    foreach ($positions as $pos) {
 
-    switch ((int)$count) {
-        // Two holes
-        case 2:
-
-            if ($dir === 'horizontal') {
-                $out .= $make($padding, ($height / 2));
-                $out .= $make(($width - $padding), ($height / 2));
-            } else {
-                $out .= $make(($width / 2) - $r, (($CURVE / 2) + $padding));
-                $out .= $make(($width / 2) - $r, (($height - $padding) - $CURVE / 2) - $gx);
-            }
-            break;
-
-        case 4:
-            $out .= $make($padding, $padding + $CURVE); // Top Left
-            $out .= $make(($width - $padding) - $gx, ($padding + $CURVE)); // Top Right
-            $out .= $make(($width - $padding) - $gx, ($height - $padding) - $CURVE); // Bottom Right
-            $out .= $make($padding, $height - ($padding + $CURVE)); // Bottom Left
-
-        default:
-            // unsupported count -> no holes
-            break;
+        $out .= get_hole([
+            'spacer' => $spacer,
+            'pos' => $pos,
+            'pdf_gap' => $gap
+        ]);
     }
 
     return $out;
 }
 
+# Get Hole
+function get_hole($data)
+{
+    global $padding, $width, $height, $size, $CURVE;
+
+    $spacer = $data['spacer'];
+    $pos    = $data['pos'];
+    $pdf_gap    = $data['pdf_gap'];
+    $r      = $size / 2;
+
+    $gap = $CURVE + $padding + $r + $pdf_gap;
+
+    $h_w = $width  / 2;
+    $h_h = $height / 2;
+
+    [$vert, $horiz] = str_split($pos); // e.g. "tc" → ["t","c"]
+
+    if ($horiz === 'c') {
+        // top/bottom center
+        if ($vert === 't') {
+            $x = $h_w + $pdf_gap;
+            $y = $padding + $r + ($CURVE / 3);
+        } elseif ($vert === 'b') {
+            $x = $h_w + $pdf_gap;
+            $y = $height - ($padding + $r + ($CURVE / 3));
+        }
+        // left/right center
+        elseif ($vert === 'l') {
+            $x = $padding + $r + $pdf_gap;
+            $y = $h_h;
+        } elseif ($vert === 'r') {
+            $x = $width - ($padding + $r + $pdf_gap);
+            $y = $h_h;
+        }
+    } else {
+        // classic corners
+        $x = ($horiz === 'l') ? ($padding + $r + $pdf_gap) : ($width - ($padding + $r + $pdf_gap));
+        $y = ($vert  === 't') ? $gap : ($height - $gap);
+    }
+
+    return make_hole([
+        'x'      => $x,
+        'y'      => $y,
+        'spacer' => $spacer,
+    ]);
+}
 
 
-
-$svg = download_svg(); // Download SVG
-$png = download_png(); // Download PNG
-$pdf = download_pdf(__DIR__); // Download PDF
-
-// Print Output Files
-echo json_encode([
-    'svg' => $svg,
-    'png' => $png,
-    'pdf' => $pdf
+# Start Downloader
+start_downloader([
+    'dir' => __DIR__
 ]);
