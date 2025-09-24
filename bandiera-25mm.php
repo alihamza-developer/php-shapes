@@ -34,29 +34,14 @@ function get_path($width, $height)
 function get_svg($holes = "", $type = "")
 {
 
-    global $PDF_OUTLINE_GAP, $PDF_OUTLINE_COLOR, $PDF_OUTLINE_WIDTH, $STROKE_COLOR, $STROKE_WIDTH;
-    global $width, $height, $size, $padding;
-    global $FILL_PATH_GAP, $FILL_P_STROKE_COLOR, $FILL_P_STROKE_WIDTH;
+    global $width, $height, $size, $padding, $STROKE_COLOR, $STROKE_WIDTH, $FILL_PATH_GAP, $FILL_P_STROKE_COLOR, $FILL_P_STROKE_WIDTH;
 
-    $is_pdf = ($type === 'pdf');
     $path = get_path($width, $height);
 
-    // Padding transform for PDF
-    $padding_ = $is_pdf ? $PDF_OUTLINE_GAP - 5 : 0;
-    $scale_x = ($width - 2 * $padding_) / $width;
-    $scale_y = ($height - 2 * $padding_) / $height;
-    $translate = $padding_;
-
-
-    // Outline
-    $outline = $is_pdf ? "<path d='{$path}' stroke='{$PDF_OUTLINE_COLOR}' stroke-width='{$PDF_OUTLINE_WIDTH}' fill='none' />" : "";
-
-    $group_start = $is_pdf ? "<g transform='translate({$translate},{$translate}) scale({$scale_x},{$scale_y})'>" : '';
-    $group_end = $is_pdf ? "</g>" : "";
-
-    $f_width = $width - ($FILL_PATH_GAP + $size + $padding + ($is_pdf ? $PDF_OUTLINE_GAP : 0) + 10);
-    $f_height = $height - ($FILL_PATH_GAP + $size + $padding + ($is_pdf ? $PDF_OUTLINE_GAP : 0) + 10);
+    $f_width = $width - ($FILL_PATH_GAP + $size + $padding);
+    $f_height = $height - ($FILL_PATH_GAP + $size + $padding);
     $path_fill = get_path($f_width, $f_height);
+    $is_pdf = ($type === 'pdf');
     $f_x = $width / 2 - ($f_width / 2);
     $f_y = $height / 2 - ($f_height / 2);
     $fill = $is_pdf ? "none" : "#000";
@@ -67,13 +52,8 @@ function get_svg($holes = "", $type = "")
     $svg = <<<SVG
     <svg xmlns="http://www.w3.org/2000/svg" width="{$width}" height="{$height}" viewBox="0 0 {$width} {$height}">
         {$fill_path_final}
-        {$outline}
         {$holes}
-
-        
-        {$group_start}
-            <path d="{$path}" stroke="{$STROKE_COLOR}" stroke-width="{$STROKE_WIDTH}" fill="none" />
-        {$group_end}
+        <path d="{$path}" stroke="{$STROKE_COLOR}" stroke-width="{$STROKE_WIDTH}" fill="none" />
     </svg>
     SVG;
 
@@ -81,66 +61,60 @@ function get_svg($holes = "", $type = "")
 }
 
 // Generate Holes
-function generate($spacer = null, $gap = 0)
+function generate($spacer = null)
 {
-    global $STROKE_WIDTH, $STROKE_COLOR;
-    global $width, $height, $padding, $count, $size, $position;
+    global $width, $height, $count, $position;
 
     $path = get_path($width, $height);
     preg_match_all('/-?\d+\.?\d*/', $path, $matches);
     $cords = $matches[0];
-
-
-    $r = $size / 2;
-
-
-    // Hole maker
-    $make = static function ($x, $y) use ($r, $size, $spacer, $STROKE_WIDTH, $STROKE_COLOR): string {
-        if (!empty($spacer)) {
-            $xPos = $x - ($size / 2);
-            $yPos = $y - ($size / 2);
-            return "<image href=\"{$spacer}\" x=\"{$xPos}\" y=\"{$yPos}\" width=\"{$size}\" height=\"{$size}\" preserveAspectRatio=\"xMidYMid meet\" />";
-        }
-
-        return "<circle stroke='{$STROKE_COLOR}' stroke-width='{$STROKE_WIDTH}' cx='{$x}' cy='{$y}' r='{$r}' fill='none' />";
-    };
-
-
-    // $x_cord = abs($cords[1]);
     $y_cord = abs($cords[1]);
 
-
-    $out = '';
+    $positions = ['tl', 'tr', 'bl', 'br'];
 
     switch ((int)$count) {
         case 2:
-            if ($position === 'bottom') {
-                // 2 Bottom Corners
-                $out .= $make($gap + $r + $padding, $height - $padding - ($y_cord / 2) - $gap);
-                $out .= $make($width - ($r + $padding) -  $gap, $height - $padding - ($y_cord / 2) - $gap);
-            } else {
-                // 2 Top Corners
-                $out .= $make($gap + $r + $padding, $gap + $padding + $y_cord);
-                $out .= $make($width - ($r + $padding) - $gap, $gap + $padding + $y_cord);
-            }
-            break;
-        case 4:
-            // 2 Top Corners
-            $out .= $make($gap + $r + $padding, $gap + $padding + $y_cord);
-            $out .= $make($width - ($r + $padding) - $gap, $gap + $padding + $y_cord);
-
-            // 2 Bottom Corners
-            $out .= $make($gap + $r + $padding, $height - $padding - ($y_cord / 2) - $gap);
-            $out .= $make($width - ($r + $padding) -  $gap, $height - $padding - ($y_cord / 2) - $gap);
-
-            break;
-
-        default:
-            // unsupported -> no holes
+            $positions = ($position === 'bottom')
+                ? ['bl', 'br']
+                : ['tl', 'tr'];
             break;
     }
 
+    $out = '';
+    foreach ($positions as $pos) {
+
+        $out .= get_hole([
+            'spacer' => $spacer,
+            'pos' => $pos,
+            'y_cord' => $y_cord
+        ]);
+    }
+
     return $out;
+}
+
+# Get Hole
+function get_hole($data)
+{
+    global $padding, $width, $height, $size;
+
+    $spacer = $data['spacer'];
+    $pos = $data['pos'];
+    $y_cord = $data['y_cord'];
+
+
+    $r = $size / 2;
+    $gap = $y_cord + $padding + $r;
+
+    [$vert, $horiz] = str_split($pos);
+    $x = ($horiz === "l") ? ($padding + $r) : ($width - ($padding + $r));
+    $y = ($vert === "t") ? $gap : ($height - ($y_cord + $r));
+
+    return make_hole([
+        'x' => $x,
+        'y' => $y,
+        'spacer' => $spacer,
+    ]);
 }
 
 

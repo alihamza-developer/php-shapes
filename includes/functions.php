@@ -290,3 +290,24 @@ function get_per($value, $percent)
 {
     return ($value * $percent) / 100;
 }
+
+# Make Hole Function
+function make_hole($data)
+{
+    global $STROKE_WIDTH, $STROKE_COLOR, $size;
+
+    $x = $data['x'];
+    $y = $data['y'];
+    $spacer = $data['spacer'];
+
+    // Hole maker
+    if (!empty($spacer)) {
+        $path = merge_path(SPACERS_PATH, $spacer);
+        $_x = $x - ($size / 2);
+        $_y = $y - ($size / 2);
+        return "<image href='{$path}' x='{$_x}' y='{$_y}' width='{$size}' height='{$size}' />";
+    }
+
+    $r = $size / 2;
+    return "<circle stroke='{$STROKE_COLOR}' stroke-width='{$STROKE_WIDTH}' cx='{$x}' cy='{$y}' r='{$r}' fill='none' />";
+}
