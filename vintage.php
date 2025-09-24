@@ -5,7 +5,7 @@ require_once "includes/functions.php";
 $width = cm_to_px($_GET['width']); // cm
 $height = cm_to_px($_GET['height']); // cm
 $radius = $_GET['radius'] ?? 0; // px
-$padding = $_GET['padding'] ?? 50; // px
+$padding = $_GET['padding'] ?? 10; // px
 
 // For Holes
 $count = intval($_GET['holes'] ?? 0); // (1,2,4,6)
@@ -13,24 +13,11 @@ $size = mm_to_px($_GET['size'] ?? 10); // mm
 $spacer = $_GET['spacer'] ?? false; // Spacer
 $position = $_GET['position'] ?? "";
 
+# Path Info (don't moidfy)
+$BASE_PATH = "M264 793l-132 0c-11,0 -23,-4 -31,-13 -8,-8 -13,-19 -13,-31l0 -88c-117,-123 -117,-317 0,-440l0 -89c0,-11 5,-23 13,-31 8,-8 20,-13 31,-13l132 0c252,-117 542,-117 794,0l132 0c11,0 23,5 31,13 8,8 13,20 13,31l0 89c117,123 117,317 0,440l0 88c0,12 -5,23 -13,31 -8,9 -20,13 -31,13l-132 0c-252,118 -542,118 -794,0z";
+$PATH_WIDTH = 1322;
+$PATH_HEIGHT = 882;
 
-// Get Path
-function get_path()
-{
-    global $width, $height;
-    $cords = "M264 793l-132 0c-11,0 -23,-4 -31,-13 -8,-8 -13,-19 -13,-31l0 -88c-117,-123 -117,-317 0,-440l0 -89c0,-11 5,-23 13,-31 8,-8 20,-13 31,-13l132 0c252,-117 542,-117 794,0l132 0c11,0 23,5 31,13 8,8 13,20 13,31l0 89c117,123 117,317 0,440l0 88c0,12 -5,23 -13,31 -8,9 -20,13 -31,13l-132 0c-252,118 -542,118 -794,0z";
-    $path = preg_replace_callback('/-?\d+\.?\d*/', function ($m) use ($width, $height) {
-        static $is_x = true;
-        $scale_x = $width / 1322;
-        $scale_y = $height / 882;
-        $val = (float)$m[0];
-        if ($is_x) $val *= $scale_x;
-        else $val *= $scale_y;
-        $is_x = !$is_x;
-        return $val;
-    }, $cords);
-    return $path;
-}
 
 // Get SVG
 function get_svg($holes = "", $type = "")
@@ -39,7 +26,7 @@ function get_svg($holes = "", $type = "")
     global $width, $height;
 
     $is_pdf = ($type === 'pdf');
-    $path = get_path();
+    $path = get_resized_path($width, $height);
 
     // Padding transform for PDF
     $padding = $is_pdf ? $PDF_OUTLINE_GAP - 5 : 0;
@@ -71,76 +58,62 @@ function get_svg($holes = "", $type = "")
 // Generate Holes
 function generate($spacer = null, $gap = 0)
 {
-    global $STROKE_WIDTH, $STROKE_COLOR;
-    global $width, $height, $padding, $count, $size, $position;
+    global $width, $height, $count, $position;
 
-    $path = get_path();
+    $path = get_resized_path($width, $height);
     preg_match_all('/-?\d+\.?\d*/', $path, $matches);
     $cords = $matches[0];
-
-
-    $r = $size / 2;
-    // Offsets for spacing
-    $gx = $gap / 2;
-    $gy = $gap / 2;
-
-    // Hole maker
-    $make = static function ($x, $y) use ($r, $size, $spacer, $gx, $gy, $STROKE_WIDTH, $STROKE_COLOR): string {
-        $x += $gx ?? 0;
-        $y += $gy ?? 0;
-
-        if (!empty($spacer)) {
-            $xPos = $x - ($size / 2);
-            $yPos = $y - ($size / 2);
-            return "<image href=\"{$spacer}\" x=\"{$xPos}\" y=\"{$yPos}\" width=\"{$size}\" height=\"{$size}\" preserveAspectRatio=\"xMidYMid meet\" />";
-        }
-
-        return "<circle stroke='{$STROKE_COLOR}' stroke-width='{$STROKE_WIDTH}' cx='{$x}' cy='{$y}' r='{$r}' fill='none' />";
-    };
-
     $x_cord = abs($cords[18]);
     $y_cord = abs($cords[41]);
 
+    $positions = ['tl', 'tr', 'bl', 'br'];
+
+    if ($count == 2)
+        $positions = $position == 'top' ? ['tl', 'tr'] : ['bl', 'br'];
 
     $out = '';
-
-    switch ((int)$count) {
-
-        case 2:
-            if ($position == 'top') {
-                $out .= $make($x_cord + $padding, $y_cord + $padding);
-                $out .= $make(($width - $x_cord) - $padding, $y_cord + $padding);
-            } else {
-                $out .= $make($x_cord + $padding, ($height -  $y_cord) - $padding);
-                $out .= $make(($width - $x_cord) - $padding, ($height -  $y_cord) - $padding);
-            }
-            break;
-
-        case 4:
-            // Four corners
-            $out .= $make($x_cord + $padding, $y_cord + $padding);
-            $out .= $make(($width - $x_cord) - $padding, $y_cord + $padding);
-
-            $out .= $make($x_cord + $padding, ($height -  $y_cord) - $padding);
-            $out .= $make(($width - $x_cord) - $padding, ($height -  $y_cord) - $padding);
-            break;
-
-        default:
-            // unsupported -> no holes
-            break;
+    foreach ($positions as $pos) {
+        $out .= get_hole([
+            'spacer' => $spacer,
+            'pos' => $pos,
+            'y_cord' => $y_cord,
+            'x_cord' => $x_cord,
+            'pdf_gap' => $gap
+        ]);
     }
 
     return $out;
 }
 
-# Download Process
-$svg = download_svg(); // Download SVG
-$png = download_png(); // Download PNG
-$pdf = download_pdf(__DIR__); // Download PDF
+# Get Hole
+function get_hole($data)
+{
+    global $padding, $width, $height, $size;
 
-// Print Output Files
-echo json_encode([
-    'svg' => $svg,
-    'png' => $png,
-    'pdf' => $pdf
+    $spacer = $data['spacer'];
+    $pos = $data['pos'];
+    $x_cord = $data['x_cord'];
+    $y_cord = $data['y_cord'];
+    $pdf_gap = $data['pdf_gap'];
+
+
+    $r = $size / 2;
+    $gap_x = $x_cord + $padding + $r + $pdf_gap;
+    $gap_y = $y_cord + $padding + $r + $pdf_gap;
+
+    [$vert, $horiz] = str_split($pos);
+    $x = ($horiz === "l") ? $gap_x : $width - $gap_x;
+    $y = ($vert === "t") ? $gap_y : $height - $gap_y;
+
+    return make_hole([
+        'x' => $x,
+        'y' => $y,
+        'spacer' => $spacer,
+    ]);
+}
+
+
+# Start Downloader
+start_downloader([
+    'dir' => __DIR__,
 ]);
