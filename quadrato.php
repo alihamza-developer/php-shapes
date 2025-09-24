@@ -14,6 +14,61 @@ $spacer = $_GET['spacer'] ?? null; // Spacer
 $position = $_GET['position'] ?? "";
 $direction = $_GET['direction'] ?? "vertical";
 
+// Get SVG
+function get_svg($holes, $type = "")
+{
+    global $PDF_OUTLINE_GAP, $width, $height, $radius, $PDF_OUTLINE_COLOR, $PDF_OUTLINE_WIDTH, $STROKE_WIDTH, $STROKE_COLOR;
+
+    $is_pdf = $type === 'pdf';
+    $is_png = $type === 'png';
+    $gap = $is_pdf ? $PDF_OUTLINE_GAP : 0;
+    $plate_x = $gap / 2;
+    $plate_y = $gap / 2;
+    $outline_w = $width + $gap;
+    $outline_h = $height + $gap;
+    $outline_radius = $radius > 1 ? ($radius + ($gap / 2)) : 0;
+    $radius += $radius > 1 ? $gap / 2 : 0;
+
+    $outline = <<<SVG
+                <!-- Outline -->
+                <rect 
+                x="0" 
+                y="0" 
+                width="{$outline_w}" 
+                height="{$outline_h}" 
+                rx="{$outline_radius}" 
+                ry="{$outline_radius}" 
+                fill="none" 
+                stroke="{$PDF_OUTLINE_COLOR}" 
+                stroke-width="{$PDF_OUTLINE_WIDTH}" 
+                />
+            SVG;
+
+    $outline = $is_pdf ? $outline : '';
+    $props = $is_png ? "" : "stroke='{$STROKE_COLOR}' storke-width='{$STROKE_WIDTH}'";
+
+    $svg = <<<BODY
+        <svg xmlns="http://www.w3.org/2000/svg" width="{$outline_w}" height="{$outline_h}" viewBox="0 0 {$outline_w} {$outline_h}">
+            
+            {$outline}
+            <!-- Plate -->
+            <rect
+            x="{$plate_x}"
+            y="{$plate_y}"
+            width="{$width}"
+            height="{$height}"
+            rx="{$radius}"
+            ry="{$radius}"
+            fill="none"
+            {$props}
+            />
+
+            {$holes}
+        </svg>
+    BODY;
+
+    return $svg;
+}
 
 // Generate Holes
 function generate($spacer = null, $gap = 0): string
@@ -50,9 +105,6 @@ function generate($spacer = null, $gap = 0): string
         'bl' => 'bottomleft',
         'bc' => 'bottomcenter',
         'br' => 'bottomright',
-        'c'  => 'center',
-        'mid' => 'center',
-        'middle' => 'center',
         'left' => 'leftcenter',
         'right' => 'rightcenter',
         'top' => 'topcenter',
@@ -167,70 +219,8 @@ function generate($spacer = null, $gap = 0): string
     return $out;
 }
 
-// Get SVG
-function get_svg($holes, $type = "")
-{
-    global $PDF_OUTLINE_GAP, $width, $height, $radius, $PDF_OUTLINE_COLOR, $PDF_OUTLINE_WIDTH, $STROKE_WIDTH, $STROKE_COLOR;
 
-    $is_pdf = $type === 'pdf';
-    $is_png = $type === 'png';
-    $gap = $is_pdf ? $PDF_OUTLINE_GAP : 0;
-    $plate_x = $gap / 2;
-    $plate_y = $gap / 2;
-    $outline_w = $width + $gap;
-    $outline_h = $height + $gap;
-    $outline_radius = $radius > 1 ? ($radius + ($gap / 2)) : 0;
-    $radius += $radius > 1 ? $gap / 2 : 0;
-
-    $outline = <<<SVG
-                <!-- Outline -->
-                <rect 
-                x="0" 
-                y="0" 
-                width="{$outline_w}" 
-                height="{$outline_h}" 
-                rx="{$outline_radius}" 
-                ry="{$outline_radius}" 
-                fill="none" 
-                stroke="{$PDF_OUTLINE_COLOR}" 
-                stroke-width="{$PDF_OUTLINE_WIDTH}" 
-                />
-            SVG;
-
-    $outline = $is_pdf ? $outline : '';
-    $props = $is_png ? "" : "stroke='{$STROKE_COLOR}' storke-width='{$STROKE_WIDTH}'";
-
-    $svg = <<<BODY
-        <svg xmlns="http://www.w3.org/2000/svg" width="{$outline_w}" height="{$outline_h}" viewBox="0 0 {$outline_w} {$outline_h}">
-            
-            {$outline}
-            <!-- Plate -->
-            <rect
-            x="{$plate_x}"
-            y="{$plate_y}"
-            width="{$width}"
-            height="{$height}"
-            rx="{$radius}"
-            ry="{$radius}"
-            fill="none"
-            {$props}
-            />
-
-            {$holes}
-        </svg>
-    BODY;
-
-    return $svg;
-}
-
-
-$svg = download_svg(); # Download SVG
-$png = download_png(); # Download PNG
-$pdf = download_pdf(__DIR__); # Download PDF
-
-// Print Output Files
-echo json_encode([
-    'svg' => $svg,
-    'png' => $png,
-    'pdf' => $pdf
+# Start Downloader
+start_downloader([
+    'dir' => __DIR__
 ]);

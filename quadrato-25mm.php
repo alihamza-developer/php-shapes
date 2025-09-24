@@ -170,37 +170,10 @@ function generate($spacer = null, $gap = 0): string
 // Get SVG
 function get_svg($holes, $type = "")
 {
-    global $PDF_OUTLINE_GAP, $width, $height, $radius, $PDF_OUTLINE_COLOR, $PDF_OUTLINE_WIDTH, $STROKE_WIDTH, $STROKE_COLOR;
-    global $FILL_PATH_GAP, $size, $padding, $FILL_P_STROKE_COLOR, $FILL_P_STROKE_WIDTH;
-
+    global  $width, $height, $radius, $STROKE_WIDTH, $STROKE_COLOR;
+    global $FILL_PATH_GAP, $size, $FILL_P_STROKE_COLOR, $FILL_P_STROKE_WIDTH;
 
     $is_pdf = $type === 'pdf';
-    $is_png = $type === 'png';
-    $gap = $is_pdf ? $PDF_OUTLINE_GAP : 0;
-    $plate_x = $gap / 2;
-    $plate_y = $gap / 2;
-    $outline_w = $width + $gap;
-    $outline_h = $height + $gap;
-    $outline_radius = $radius > 1 ? ($radius + ($gap / 2)) : 0;
-    $radius += $radius > 1 ? $gap / 2 : 0;
-
-    $outline = <<<SVG
-                <!-- Outline -->
-                <rect 
-                x="0" 
-                y="0" 
-                width="{$outline_w}" 
-                height="{$outline_h}" 
-                rx="{$outline_radius}" 
-                ry="{$outline_radius}" 
-                fill="none" 
-                stroke="{$PDF_OUTLINE_COLOR}" 
-                stroke-width="{$PDF_OUTLINE_WIDTH}" 
-                />
-            SVG;
-
-    $outline = $is_pdf ? $outline : '';
-
 
     $r_w = $width - ($FILL_PATH_GAP + $size);
     $r_h = $height - ($FILL_PATH_GAP + $size);
@@ -216,13 +189,12 @@ function get_svg($holes, $type = "")
 
 
     $svg = <<<BODY
-        <svg xmlns="http://www.w3.org/2000/svg" width="{$outline_w}" height="{$outline_h}" viewBox="0 0 {$outline_w} {$outline_h}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="{$width}" height="{$height}" viewBox="0 0 {$width} {$height}">
             {$fill_r}
-            {$outline}
             <!-- Plate -->
             <rect
-            x="{$plate_x}"
-            y="{$plate_y}"
+            x="0"
+            y="0"
             width="{$width}"
             height="{$height}"
             rx="{$radius}"
@@ -239,14 +211,8 @@ function get_svg($holes, $type = "")
     return $svg;
 }
 
-
-$svg = download_svg(false); # Download SVG
-$png = download_png(); # Download PNG
-$pdf = download_pdf(__DIR__); # Download PDF
-
-// Print Output Files
-echo json_encode([
-    'svg' => $svg,
-    'png' => $png,
-    'pdf' => $pdf
+# Start Downloader
+start_downloader([
+    'dir' => __DIR__,
+    'compress' => false
 ]);
