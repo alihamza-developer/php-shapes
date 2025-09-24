@@ -13,22 +13,11 @@ $position = $_GET['position'] ?? "";
 $direction = $_GET['direction'] ?? "";
 
 
-// Get Path
-function get_path($width, $height)
-{
-    $cords = "M0 87l0 770c0,7 3,13 9,18 5,4 12,5 18,4 181,-41 366,-62 551,-63 52,0 104,3 155,11 187,39 377,57 568,53 12,0 21,-10 21,-22l0 -772c0,-6 -2,-11 -6,-15 -5,-5 -10,-7 -16,-7 -191,4 -382,-14 -569,-53 -51,-7 -103,-11 -155,-11 -188,1 -376,23 -559,65 -10,3 -17,12 -17,22z";
-    $path = preg_replace_callback('/-?\d+\.?\d*/', function ($m) use ($width, $height) {
-        static $is_x = true;
-        $scale_x = $width / 1322;
-        $scale_y = $height /  881;
-        $val = (float)$m[0];
-        if ($is_x) $val *= $scale_x;
-        else $val *= $scale_y;
-        $is_x = !$is_x;
-        return $val;
-    }, $cords);
-    return $path;
-}
+# Path Info (don't moidfy)
+$BASE_PATH = "M0 87l0 770c0,7 3,13 9,18 5,4 12,5 18,4 181,-41 366,-62 551,-63 52,0 104,3 155,11 187,39 377,57 568,53 12,0 21,-10 21,-22l0 -772c0,-6 -2,-11 -6,-15 -5,-5 -10,-7 -16,-7 -191,4 -382,-14 -569,-53 -51,-7 -103,-11 -155,-11 -188,1 -376,23 -559,65 -10,3 -17,12 -17,22z";
+$PATH_WIDTH = 1322;
+$PATH_HEIGHT = 881;
+
 
 // Get SVG
 function get_svg($holes = "", $type = "")
@@ -36,11 +25,11 @@ function get_svg($holes = "", $type = "")
 
     global $width, $height, $size, $padding, $STROKE_COLOR, $STROKE_WIDTH, $FILL_PATH_GAP, $FILL_P_STROKE_COLOR, $FILL_P_STROKE_WIDTH;
 
-    $path = get_path($width, $height);
+    $path = get_resized_path($width, $height);
 
     $f_width = $width - ($FILL_PATH_GAP + $size + $padding);
     $f_height = $height - ($FILL_PATH_GAP + $size + $padding);
-    $path_fill = get_path($f_width, $f_height);
+    $path_fill = get_resized_path($f_width, $f_height);
     $is_pdf = ($type === 'pdf');
     $f_x = $width / 2 - ($f_width / 2);
     $f_y = $height / 2 - ($f_height / 2);
@@ -65,7 +54,7 @@ function generate($spacer = null)
 {
     global $width, $height, $count, $position;
 
-    $path = get_path($width, $height);
+    $path = get_resized_path($width, $height);
     preg_match_all('/-?\d+\.?\d*/', $path, $matches);
     $cords = $matches[0];
     $y_cord = abs($cords[1]);
