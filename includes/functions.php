@@ -329,3 +329,21 @@ function get_resized_path($width, $height)
 
     return $path;
 }
+
+# Start Downloader
+function start_downloader($data)
+{
+    $dir = $data['dir'];
+    $compress = $data['compress'] ?? true;
+    # Download Process
+    $svg = download_svg($compress); // Download SVG
+    $png = download_png(); // Download PNG
+    $pdf = download_pdf($dir); // Download PDF
+
+    // Print Output Files
+    echo json_encode([
+        'svg' => $svg,
+        'png' => $png,
+        'pdf' => $pdf
+    ]);
+}

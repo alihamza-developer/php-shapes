@@ -118,14 +118,8 @@ function get_hole($data)
 }
 
 
-# Download Process
-$svg = download_svg(false); // Download SVG
-$png = download_png(); // Download PNG
-$pdf = download_pdf(__DIR__); // Download PDF
-
-// Print Output Files
-echo json_encode([
-    'svg' => $svg,
-    'png' => $png,
-    'pdf' => $pdf
+# Start Downloader
+start_downloader([
+    'dir' => __DIR__,
+    'compress' => false
 ]);
