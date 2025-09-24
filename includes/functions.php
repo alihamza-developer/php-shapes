@@ -302,10 +302,9 @@ function make_hole($data)
 
     // Hole maker
     if (!empty($spacer)) {
-        $path = merge_path(SPACERS_PATH, $spacer);
         $_x = $x - ($size / 2);
         $_y = $y - ($size / 2);
-        return "<image href='{$path}' x='{$_x}' y='{$_y}' width='{$size}' height='{$size}' />";
+        return "<image href='{$spacer}' x='{$_x}' y='{$_y}' width='{$size}' height='{$size}' />";
     }
 
     $r = $size / 2;
