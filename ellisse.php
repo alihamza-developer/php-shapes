@@ -9,10 +9,7 @@ $padding = $_GET['padding'] ?? 50; // px
 $count = intval($_GET['holes'] ?? 0); // (1,2,4)
 $size = mm_to_px($_GET['size'] ?? 10); // mm
 $spacer = $_GET['spacer'] ?? null; // Spacer
-$position = $_GET['position'] ?? "";
 $direction = $_GET['direction'] ?? "vertical";
-
-
 
 
 // Get SVG for Ellipse
@@ -22,10 +19,10 @@ function get_svg($holes = "", $type = "")
 
     global $width, $height;
     $is_pdf = $type === 'pdf';
-    $gap    = $is_pdf ? $PDF_OUTLINE_GAP : 0;
+    $gap = $is_pdf ? $PDF_OUTLINE_GAP : 0;
 
-    $cx = ($width + $gap) / 2;
-    $cy = ($height + $gap) / 2;
+    $cx = (($width + $gap) / 2) - $STROKE_WIDTH;
+    $cy = (($height + $gap) / 2) - $STROKE_WIDTH;
     $rx = ($width / 2);
     $ry = ($height / 2);
 
@@ -73,107 +70,79 @@ function get_svg($holes = "", $type = "")
     return $svg;
 }
 
-// Generate Holes For Ellipse
+// Generate Holes
 function generate($spacer = null, $gap = 0)
 {
-    global $width, $height, $padding, $count, $size, $position, $direction, $STROKE_COLOR, $STROKE_WIDTH;
+    global $count, $direction;
 
-    $cx = $width / 2;
-    $cy = $height / 2;
-    $rx = ($width / 2) - $padding;   // horizontal radius
-    $ry = ($height / 2) - $padding;  // vertical radius
-    $r  = $size / 2;
-
-    $gx = $gap / 2;
-    $gy = $gap / 2;
-
-    // Normalize inputs
-    $norm = static function ($s): string {
-        $s = strtolower((string)$s);
-        return str_replace(['-', '_', ' '], '', $s);
-    };
-    $dir = $norm($direction);
-    if ($dir === 'h') $dir = 'horizontal';
-    if ($dir === 'v') $dir = 'vertical';
-    $pos = $norm($position ?? 'top');
-    $aliases = [
-        'top'    => 'topcenter',
-        'bottom' => 'bottomcenter',
-        'left'   => 'leftcenter',
-        'right'  => 'rightcenter',
-    ];
-    $pos = $aliases[$pos] ?? $pos;
-
-    // Hole generator
-    $make = static function ($x, $y) use ($r, $size, $spacer, $gx, $gy, $STROKE_COLOR, $STROKE_WIDTH): string {
-        $x += $gx ?? 0;
-        $y += $gy ?? 0;
-
-        if (!empty($spacer)) {
-            $xPos = $x - $size / 2;
-            $yPos = $y - $size / 2;
-            return "<image href='{$spacer}' x='{$xPos}' y='{$yPos}' width='{$size}' height='{$size}' />";
-        }
-
-        return "<circle stroke='{$STROKE_COLOR}' stroke-width='{$STROKE_WIDTH}' cx='{$x}' cy='{$y}' r='{$r}' fill='none' />";
-    };
-
-    $out = '';
+    $positions = ['tc', 'rc', 'bc', 'lc'];
 
     switch ((int)$count) {
-        case 1: {
-                $map = [
-                    'topcenter'    => [$cx, $cy - $ry],
-                    'bottomcenter' => [$cx, $cy + $ry],
-                    'leftcenter'   => [$cx - $rx, $cy],
-                    'rightcenter'  => [$cx + $rx, $cy],
-                    'center'       => [$cx, $cy],
-                ];
-                [$x, $y] = $map[$pos] ?? $map['topcenter'];
-                $out .= $make($x, $y);
-                break;
-            }
-
-        case 2: {
-                if ($dir === 'horizontal') {
-                    $out .= $make($cx - $rx, $cy);
-                    $out .= $make($cx + $rx, $cy);
-                } else { // vertical
-                    $out .= $make($cx, $cy - $ry);
-                    $out .= $make($cx, $cy + $ry);
-                }
-                break;
-            }
-
-        case 4: {
-                $coords = [
-                    [$cx, $cy - $ry], // top
-                    [$cx + $rx, $cy], // right
-                    [$cx, $cy + $ry], // bottom
-                    [$cx - $rx, $cy], // left
-                ];
-                foreach ($coords as [$x, $y]) {
-                    $out .= $make($x, $y);
-                }
-                break;
-            }
-
-        default:
-            // unsupported count
+        case 1:
+            $positions = ['tc'];
             break;
+        case 2:
+            $positions = $direction === 'vertical' ? ['tc', 'bc'] : ['rc', 'lc'];
+            break;
+    }
+
+
+    $out = '';
+    foreach ($positions as $pos) {
+
+        $out .= get_hole([
+            'spacer' => $spacer,
+            'pos' => $pos,
+            'pdf_gap' => $gap
+        ]);
     }
 
     return $out;
 }
 
+# Get Hole
+function get_hole($data)
+{
+    global $padding, $width, $height, $size;
+    $spacer   = $data['spacer'];
+    $pos      = $data['pos'];
+    $pdf_gap  = $data['pdf_gap'];
+    $r   = $size / 2;
+    $gap = ($r + $padding + $pdf_gap);
+    $h_w = $width / 2;
+    $h_h = $height / 2;
 
-$svg = download_svg(); // Download SVG
-$png = download_png(); // Download PNG
-$pdf = download_pdf(__DIR__); // Download PDF
+    switch ($pos) {
+        case 'tc':
+            $x = $h_w;
+            $y = $gap;
+            break;
+        case 'bc':
+            $x = $h_w;
+            $y = $height - $gap;
+            break;
+        case 'lc':
+            $x = $gap;
+            $y = $h_h;
+            break;
+        case 'rc':
+            $x = $width - $gap;
+            $y = $h_h;
+            break;
+        default:
+            return ''; // ignore invalid pos
+    }
 
-// Print Output Files
-echo json_encode([
-    'svg' => $svg,
-    'png' => $png,
-    'pdf' => $pdf
+    $hole =  make_hole([
+        'x'      => $x,
+        'y'      => $y,
+        'spacer' => $spacer,
+    ]);
+
+    return $hole;
+}
+
+# Start Downloader
+start_downloader([
+    'dir' => __DIR__
 ]);
