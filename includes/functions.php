@@ -18,6 +18,12 @@ define("SPACERS_PATH", "./spacers");
 
 define('INKSCAPE_PATH', '"C:\\Program Files\\Inkscape\\bin\\inkscape.exe"');
 
+
+# Version C Vars
+$FRAME_GAP = mm_to_px(5);
+$FRAME_WIDTH = mm_to_px(3);
+$FRAME_HOLES_GAP = mm_to_px(8);
+
 // CM to PX
 function cm_to_px($cm)
 {
