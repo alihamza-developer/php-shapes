@@ -6,7 +6,7 @@ $width = cm_to_px($_GET['width']); // cm
 $height = cm_to_px($_GET['height']); // cm
 $radius = $_GET['radius'] ?? 25; // px
 $frame = (bool) ($_GET['frame'] ?? false);
-$padding =  intval($_GET['padding'] ?? 40) + $FRAME_GAP; // px
+$padding =  $FRAME_HOLES_GAP; // px
 
 // For Holes
 $count = intval($_GET['holes'] ?? 0); // (1,2,4,6)
@@ -71,8 +71,16 @@ function get_svg($holes)
 // Generate Holes
 function generate($spacer = null, $gap = 0): string
 {
-    global $STROKE_WIDTH, $STROKE_COLOR;
-    global $width, $height, $padding, $count, $position, $size, $direction;
+    global $STROKE_WIDTH, $STROKE_COLOR, $FRAME_WIDTH, $FRAME_GAP;
+    global $width, $height, $padding, $count, $position, $size, $direction, $frame;
+
+    if ($count < 2) return "";
+    else {
+        $direction = "horizontal";
+        $position = "center";
+        $count = 2;
+        if ($frame) $padding += $FRAME_WIDTH + $FRAME_GAP;
+    }
 
     $gap  = 0;
 

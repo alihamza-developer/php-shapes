@@ -72,17 +72,7 @@ function generate($spacer = null, $gap = 0)
 
     $gap += $frame ? $FRAME_GAP + $FRAME_WIDTH : 0;
 
-    $positions = ['tc', 'rc', 'bc', 'lc'];
-
-    switch ((int)$count) {
-        case 1:
-            $positions = ['tc'];
-            break;
-        case 2:
-            $positions = $direction === 'vertical' ? ['tc', 'bc'] : ['rc', 'lc'];
-            break;
-    }
-
+    $positions = $count < 2 ? [] : ['lc', 'rc'];
 
     $out = '';
     foreach ($positions as $pos) {

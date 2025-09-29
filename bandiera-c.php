@@ -61,16 +61,8 @@ function generate($spacer = null, $gap = 0)
     $cords = $matches[0];
     $y_cord = abs($cords[1]);
 
-    $positions = ['tl', 'tr', 'bl', 'br'];
-
-    switch ((int)$count) {
-        case 2:
-            $positions = ($position === 'bottom')
-                ? ['bl', 'br']
-                : ['tl', 'tr'];
-            break;
-    }
-
+    $positions = ['lc', 'rc'];
+    if ($count < 2) $positions = [];
     $out = '';
     foreach ($positions as $pos) {
 
@@ -92,15 +84,12 @@ function get_hole($data)
 
     $spacer = $data['spacer'];
     $pos = $data['pos'];
-    $y_cord = $data['y_cord'];
-    $pdf_gap = $data['pdf_gap'];
     $r = $size / 2;
 
-    $gap = $y_cord + $padding + $r;
 
     [$vert, $horiz] = str_split($pos);
-    $x = ($horiz === "l") ? ($padding + $r + $pdf_gap) : ($width - ($padding + $r + $pdf_gap));
-    $y = ($vert === "t") ? $gap + $pdf_gap : ($height - ($y_cord + $r + $pdf_gap));
+    $x = ($vert === "l") ? ($r + $padding) : ($width - ($padding + $r));
+    $y =  $height / 2 + $r;
 
     return make_hole([
         'x' => $x,

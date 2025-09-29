@@ -59,10 +59,7 @@ function generate($spacer = null, $gap = 0)
     $x_cord = abs($cords[18]);
     $y_cord = abs($cords[41]);
 
-    $positions = ['tl', 'tr', 'bl', 'br'];
-
-    if ($count == 2)
-        $positions = $position == 'top' ? ['tl', 'tr'] : ['bl', 'br'];
+    $positions = $count < 2 ? [] : ['lc', 'rc'];
 
     $out = '';
     foreach ($positions as $pos) {
@@ -91,12 +88,11 @@ function get_hole($data)
 
 
     $r = $size / 2;
-    $gap_x = $x_cord + $padding + $r + $pdf_gap;
-    $gap_y = $y_cord + $padding + $r + $pdf_gap;
+    $gap_x = $padding + $r;
 
     [$vert, $horiz] = str_split($pos);
-    $x = ($horiz === "l") ? $gap_x : $width - $gap_x;
-    $y = ($vert === "t") ? $gap_y : $height - $gap_y;
+    $x = ($vert === "l") ? $gap_x : $width - $gap_x;
+    $y = $height / 2;
 
     return make_hole([
         'x' => $x,
@@ -104,7 +100,8 @@ function get_hole($data)
         'spacer' => $spacer,
     ]);
 }
-
+echo get_svg(generate());
+exit;
 # Start Downloader
 start_downloader([
     'dir' => __DIR__,

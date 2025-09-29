@@ -66,17 +66,7 @@ function generate($spacer = null, $gap = 0)
     global $count, $direction, $FRAME_GAP, $frame;
     $gap = $frame ? $FRAME_GAP : 0;
 
-    $positions = ['tc', 'rc', 'bc', 'lc'];
-
-    switch ((int)$count) {
-        case 1:
-            $positions = ['tc'];
-            break;
-        case 2:
-            $positions = $direction === 'vertical' ? ['tc', 'bc'] : ['rc', 'lc'];
-            break;
-    }
-
+    $positions = $count < 2 ? [] : ['lc', 'rc'];
 
     $out = '';
     foreach ($positions as $pos) {
@@ -99,21 +89,11 @@ function get_hole($data)
     $size = $hole_size;
     $spacer   = $data['spacer'];
     $pos      = $data['pos'];
-    $pdf_gap  = $data['pdf_gap'];
     $r   = $size / 2;
-    $gap = ($r + $padding + $pdf_gap);
-    $h_w = $width / 2;
+    $gap = ($r + $padding + $data['pdf_gap']);
     $h_h = $height / 2;
 
     switch ($pos) {
-        case 'tc':
-            $x = $h_w;
-            $y = $gap;
-            break;
-        case 'bc':
-            $x = $h_w;
-            $y = $height - $gap;
-            break;
         case 'lc':
             $x = $gap;
             $y = $h_h;

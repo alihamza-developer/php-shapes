@@ -62,15 +62,10 @@ function generate($spacer = null, $gap = 0)
     $x_cord = abs($cords[66]);
     $y_cord = abs($cords[5]);
 
-    $positions = [
-        'tl',
-        'tr',
-        'bl',
-        'br'
+    $positions = $count < 2 ? [] : [
+        'lc',
+        'rc',
     ];
-
-    if ($count === 2)
-        $positions = ($direction == 'vertical') ? ['tc', 'bc'] : ['lc', 'rc'];
 
     $out = '';
     foreach ($positions as $pos) {
