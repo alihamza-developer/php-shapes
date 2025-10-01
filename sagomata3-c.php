@@ -9,7 +9,7 @@ $padding = $FRAME_HOLES_GAP;
 
 // For Holes
 $count = intval($_GET['holes'] ?? 0); // (2)
-$size = mm_to_px($_GET['size'] ?? 10); // mm
+$size = mm_to_px($_GET['size'] ?? 3); // mm
 $spacer = $_GET['spacer'] ?? false; // Spacer
 
 
@@ -28,8 +28,8 @@ function get_svg($holes = "")
     $path = get_resized_path($width, $height);
 
     // Frame Width,Height
-    $f_w = $width - $FRAME_GAP - $FRAME_WIDTH;
-    $f_h = $height - $FRAME_GAP - $FRAME_WIDTH;
+    $f_w = $width - $FRAME_GAP;
+    $f_h = $height - $FRAME_GAP;
     $path_frame = get_resized_path($f_w, $f_h);
     $f_x = $width / 2 - ($f_w / 2);
     $f_y = $height / 2 - ($f_h / 2);
@@ -78,13 +78,12 @@ function get_hole($data)
 
     $spacer = $data['spacer'];
     $pos = $data['pos'];
-    $pdf_gap = $data['pdf_gap'];
 
     $h_h = $height / 2;
     $r = $size / 2;
     [$vert, $horiz] = str_split($pos);
 
-    $x = ($vert === 'l') ? ($padding + $r + $pdf_gap) : $width - ($padding + $r + $pdf_gap);
+    $x = ($vert === 'l') ? ($padding + $r) : $width - ($padding + $r);
     $y = $h_h;
 
     return make_hole([

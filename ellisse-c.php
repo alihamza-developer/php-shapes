@@ -3,12 +3,12 @@ require_once "includes/functions.php";
 // For Circle
 $width = cm_to_px($_GET['width']); // cm
 $height = cm_to_px($_GET['height']); // cm
-$padding = $_GET['padding'] ?? 15; // px
+$padding = $FRAME_HOLES_GAP; // px
 $frame = (bool) ($_GET['frame'] ?? null);
 
 // Holes Info
 $count = intval($_GET['holes'] ?? 0); // (1,2,4)
-$size = mm_to_px($_GET['size'] ?? 10); // mm
+$size = mm_to_px($_GET['size'] ?? 3); // mm
 $spacer = $_GET['spacer'] ?? null; // Spacer
 $direction = $_GET['direction'] ?? "vertical";
 
@@ -21,14 +21,14 @@ function get_svg($holes = "")
     global $width, $height;
 
 
-    $cx = ($width / 2) - 2;
-    $cy = ($height / 2) - 2;
-    $rx = ($width / 2);
-    $ry = ($height / 2);
+    $cx = $width / 2;
+    $cy = $height / 2;
+    $rx = $width / 2;
+    $ry = $height / 2;
 
     # Frame
-    $frame_rx = ($width - ($FRAME_GAP + $FRAME_WIDTH)) / 2;
-    $frame_ry = ($height - ($FRAME_GAP + $FRAME_WIDTH)) / 2;
+    $frame_rx = $rx - ($FRAME_GAP / 2);
+    $frame_ry = $ry - ($FRAME_GAP / 2);
 
     $frame_e = $frame ? <<<SVG
         <!-- Outline -->
@@ -93,9 +93,8 @@ function get_hole($data)
     global $padding, $width, $height, $size;
     $spacer   = $data['spacer'];
     $pos      = $data['pos'];
-    $pdf_gap  = $data['pdf_gap'];
     $r   = $size / 2;
-    $gap = ($r + $padding + $pdf_gap);
+    $gap = ($r + $padding);
     $h_w = $width / 2;
     $h_h = $height / 2;
 
@@ -128,7 +127,6 @@ function get_hole($data)
 
     return $hole;
 }
-
 # Start Downloader
 start_downloader([
     'dir' => __DIR__,

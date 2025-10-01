@@ -9,7 +9,7 @@ $padding = $FRAME_HOLES_GAP;
 
 // For Holes
 $count = intval($_GET['holes'] ?? 0);
-$size = mm_to_px($_GET['size'] ?? 8); // mm
+$size = mm_to_px($_GET['size'] ?? 3); // mm
 $spacer = $_GET['spacer'] ?? false; // Spacer
 $position = $_GET['position'] ?? "";
 
@@ -28,8 +28,8 @@ function get_svg($holes = "")
     $path = get_resized_path($width, $height);
 
     // Frame Width,Height
-    $f_w = $width - $FRAME_GAP - $FRAME_WIDTH;
-    $f_h = $height - $FRAME_GAP - $FRAME_WIDTH;
+    $f_w = $width - $FRAME_GAP;
+    $f_h = $height - $FRAME_GAP;
     $path_frame = get_resized_path($f_w, $f_h);
     $f_x = $width / 2 - ($f_w / 2);
     $f_y = $height / 2 - ($f_h / 2);
@@ -82,9 +82,6 @@ function get_hole($data)
 
     $spacer = $data['spacer'];
     $pos = $data['pos'];
-    $x_cord = $data['x_cord'];
-    $y_cord = $data['y_cord'];
-    $pdf_gap = $data['pdf_gap'];
 
 
     $r = $size / 2;
@@ -100,8 +97,7 @@ function get_hole($data)
         'spacer' => $spacer,
     ]);
 }
-echo get_svg(generate());
-exit;
+
 # Start Downloader
 start_downloader([
     'dir' => __DIR__,

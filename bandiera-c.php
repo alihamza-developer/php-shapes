@@ -7,7 +7,7 @@ $frame = (bool) ($_GET['frame'] ?? null);
 $padding = $FRAME_HOLES_GAP;
 // For Holes
 $count = intval($_GET['holes'] ?? 0); // (1,2,4,6)
-$size = mm_to_px($_GET['size'] ?? 8); // mm
+$size = mm_to_px($_GET['size'] ?? 3); // mm
 $spacer = $_GET['spacer'] ?? false; // Spacer
 $position = $_GET['position'] ?? "";
 $direction = $_GET['direction'] ?? "";
@@ -23,14 +23,14 @@ $PATH_HEIGHT = 881;
 // Get SVG
 function get_svg($holes = "")
 {
-    global $STROKE_COLOR, $STROKE_WIDTH, $FRAME_WIDTH, $FRAME_GAP, $FRAME_WIDTH;
+    global $STROKE_COLOR, $STROKE_WIDTH, $FRAME_WIDTH, $FRAME_GAP;
     global $width, $height, $frame;
 
     $path = get_resized_path($width, $height);
 
     // Frame Width,Height
-    $f_w = $width - $FRAME_GAP - $FRAME_WIDTH;
-    $f_h = $height - $FRAME_GAP - $FRAME_WIDTH;
+    $f_w = $width  - $FRAME_GAP;
+    $f_h = $height  - $FRAME_GAP;
     $path_frame = get_resized_path($f_w, $f_h);
     $f_x = $width / 2 - ($f_w / 2);
     $f_y = $height / 2 - ($f_h / 2);
@@ -53,8 +53,7 @@ function get_svg($holes = "")
 // Generate Holes
 function generate($spacer = null, $gap = 0)
 {
-    global $width, $height, $count, $position, $frame, $FRAME_GAP, $FRAME_WIDTH;
-    $gap = $frame ? $FRAME_WIDTH + $FRAME_GAP : 0;
+    global $width, $height, $count;
 
     $path = get_resized_path($width, $height);
     preg_match_all('/-?\d+\.?\d*/', $path, $matches);
@@ -97,7 +96,6 @@ function get_hole($data)
         'spacer' => $spacer,
     ]);
 }
-
 # Start Downloader
 start_downloader([
     'dir' => __DIR__,

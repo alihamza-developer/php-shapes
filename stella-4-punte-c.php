@@ -8,7 +8,7 @@ $padding = $FRAME_HOLES_GAP;
 
 // For Holes
 $count = intval($_GET['holes'] ?? 0); // (1,2,4,6)
-$size = mm_to_px($_GET['size'] ?? 8); // mm
+$size = mm_to_px($_GET['size'] ?? 3); // mm
 $spacer = $_GET['spacer'] ?? false; // Spacer
 $direction = $_GET['direction'] ?? "";
 
@@ -28,8 +28,8 @@ function get_svg($holes = "")
     $path = get_resized_path($width, $height);
 
     // Frame Width,Height
-    $f_w = $width - $FRAME_GAP - $FRAME_WIDTH;
-    $f_h = $height - $FRAME_GAP - $FRAME_WIDTH;
+    $f_w = $width - $FRAME_GAP;
+    $f_h = $height - $FRAME_GAP;
     $path_frame = get_resized_path($f_w, $f_h);
     $f_x = $width / 2 - ($f_w / 2);
     $f_y = $height / 2 - ($f_h / 2);
@@ -90,13 +90,12 @@ function get_hole($data)
     $pos = $data['pos'];
     $x_cord = $data['x_cord'];
     $y_cord = $data['y_cord'];
-    $pdf_gap = $data['pdf_gap'];
 
     $h_w = $width  / 2;
     $h_h = $height / 2;
     $r = $size / 2;
-    $gap_x = $padding + $r + $pdf_gap;
-    $gap_y = $padding + $r + $pdf_gap;
+    $gap_x = $padding + $r;
+    $gap_y = $padding + $r;
     [$vert, $horiz] = str_split($pos);
 
     $x = ($horiz === "l") ? $gap_x : $width - $gap_x;
@@ -113,10 +112,10 @@ function get_hole($data)
         }
         // left/right center
         elseif ($vert === 'l') {
-            $x = $padding + $r + $pdf_gap + $x_cord;
+            $x = $padding + $r  + $x_cord;
             $y = $h_h;
         } elseif ($vert === 'r') {
-            $x = $width - ($padding + $r + $pdf_gap + $x_cord);
+            $x = $width - ($padding + $r  + $x_cord);
             $y = $h_h;
         }
     }

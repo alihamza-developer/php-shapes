@@ -6,11 +6,11 @@ $width = cm_to_px($_GET['width']); // cm
 $height = cm_to_px($_GET['height']); // cm
 $radius = $_GET['radius'] ?? 25; // px
 $frame = (bool) ($_GET['frame'] ?? false);
-$padding =  $FRAME_HOLES_GAP; // px
 
 // For Holes
 $count = intval($_GET['holes'] ?? 0); // (1,2,4,6)
-$size = mm_to_px($_GET['size'] ?? 10); // mm
+$size = mm_to_px($_GET['size'] ?? 3); // mm
+$padding =  $FRAME_HOLES_GAP + ($size / 2); // px
 $spacer = $_GET['spacer'] ?? null; // Spacer
 $position = $_GET['position'] ?? "";
 $direction = $_GET['direction'] ?? "vertical";
@@ -21,8 +21,8 @@ function get_svg($holes)
     global $frame, $FRAME_GAP, $FRAME_WIDTH, $width, $height, $radius, $STROKE_WIDTH, $STROKE_COLOR;
 
     $gap_h = $FRAME_GAP / 2;
-    $frame_w = $width - $FRAME_GAP - $FRAME_WIDTH;
-    $frame_h = $height - $FRAME_GAP - $FRAME_WIDTH;
+    $frame_w = $width - $FRAME_GAP;
+    $frame_h = $height - $FRAME_GAP;
     $outline_radius = $radius > 1 ? ($radius + $gap_h) : 0;
 
     $radius += $radius > 1 ? $gap_h : 0;
@@ -79,17 +79,15 @@ function generate($spacer = null, $gap = 0): string
         $direction = "horizontal";
         $position = "center";
         $count = 2;
-        if ($frame) $padding += $FRAME_WIDTH + $FRAME_GAP;
     }
 
-    $gap  = 0;
 
     $cx = $width / 2;
     $cy = $height / 2;
     $r  = $size / 2;
 
-    $gx = $gap / 2;
-    $gy = $gap / 2;
+    $gx = 0;
+    $gy = 0;
 
     // Normalizers
     $norm = static function ($s): string {
@@ -123,9 +121,6 @@ function generate($spacer = null, $gap = 0): string
 
     // Circle or Image generator with global offsets
     $make = static function ($x, $y) use ($r, $size, $spacer, $gx, $gy, $STROKE_WIDTH, $STROKE_COLOR): string {
-        // Apply offsets
-        $x += $gx ?? 0;
-        $y += $gy ?? 0;
 
         if (!empty($spacer)) {
             // Place image centered at ($x, $y)
